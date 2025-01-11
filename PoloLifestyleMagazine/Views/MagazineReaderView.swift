@@ -21,13 +21,25 @@ struct MagazineReaderView: View {
                     .ignoresSafeArea()
                 
                 if isLoading {
-                    ProgressView()
-                        .scaleEffect(1.5)
+                    // Enhanced loading view
+                    VStack(spacing: 15) {
+                        ProgressView()
+                            .scaleEffect(2.0)
+                            .tint(.gray)
+                        
+                        Text("Loading Magazine...")
+                            .font(.headline)
+                            .foregroundColor(.gray)
+                    }
+                    .padding(30)
+                    .background(.ultraThinMaterial)
+                    .cornerRadius(15)
+                    .shadow(radius: 10)
                 } else if let error = loadingError {
                     VStack {
                         Image(systemName: "exclamationmark.triangle")
                             .font(.largeTitle)
-                        Text("Failed to load PDF")
+                        Text("Failed to load Magazine")
                             .font(.headline)
                         Text(error.localizedDescription)
                             .font(.subheadline)
@@ -127,7 +139,7 @@ struct MagazineReaderView: View {
                     pdfDocument = document
                     totalPages = document.pageCount
                 } else {
-                    loadingError = NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to load PDF"])
+                    loadingError = NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to load Magazine"])
                 }
                 isLoading = false
             }
