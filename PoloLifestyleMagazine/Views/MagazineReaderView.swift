@@ -25,11 +25,11 @@ struct MagazineReaderView: View {
                     VStack(spacing: 15) {
                         ProgressView()
                             .scaleEffect(2.0)
-                            .tint(.gray)
+                            .tint(.white)
                         
                         Text("Loading Magazine...")
                             .font(.headline)
-                            .foregroundColor(.gray)
+                            .foregroundColor(.white)
                     }
                     .padding(30)
                     .background(.ultraThinMaterial)
