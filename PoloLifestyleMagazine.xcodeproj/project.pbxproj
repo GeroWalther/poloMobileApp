@@ -1,0 +1,611 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		3DC857AC2D33129E00169FDB /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = 3DC857AB2D33129E00169FDB /* PostgREST */; };
+		3DC857AE2D3312B100169FDB /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 3DC857AD2D3312B100169FDB /* Supabase */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		3D95702B2D3296AC009A3FDC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3D9570122D3296AA009A3FDC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3D9570192D3296AA009A3FDC;
+			remoteInfo = PoloLifestyleMagazine;
+		};
+		3D9570352D3296AC009A3FDC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3D9570122D3296AA009A3FDC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3D9570192D3296AA009A3FDC;
+			remoteInfo = PoloLifestyleMagazine;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		3D95701A2D3296AA009A3FDC /* PoloLifestyleMagazine.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PoloLifestyleMagazine.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3D95702A2D3296AC009A3FDC /* PoloLifestyleMagazineTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PoloLifestyleMagazineTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		3D9570342D3296AC009A3FDC /* PoloLifestyleMagazineUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PoloLifestyleMagazineUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		3D95701C2D3296AA009A3FDC /* PoloLifestyleMagazine */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = PoloLifestyleMagazine;
+			sourceTree = "<group>";
+		};
+		3D95702D2D3296AC009A3FDC /* PoloLifestyleMagazineTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = PoloLifestyleMagazineTests;
+			sourceTree = "<group>";
+		};
+		3D9570372D3296AC009A3FDC /* PoloLifestyleMagazineUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = PoloLifestyleMagazineUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		3D9570172D3296AA009A3FDC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3DC857AE2D3312B100169FDB /* Supabase in Frameworks */,
+				3DC857AC2D33129E00169FDB /* PostgREST in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3D9570272D3296AC009A3FDC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3D9570312D3296AC009A3FDC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		3D9570112D3296AA009A3FDC = {
+			isa = PBXGroup;
+			children = (
+				3D95701C2D3296AA009A3FDC /* PoloLifestyleMagazine */,
+				3D95702D2D3296AC009A3FDC /* PoloLifestyleMagazineTests */,
+				3D9570372D3296AC009A3FDC /* PoloLifestyleMagazineUITests */,
+				3DC857AA2D33129E00169FDB /* Frameworks */,
+				3D95701B2D3296AA009A3FDC /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		3D95701B2D3296AA009A3FDC /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				3D95701A2D3296AA009A3FDC /* PoloLifestyleMagazine.app */,
+				3D95702A2D3296AC009A3FDC /* PoloLifestyleMagazineTests.xctest */,
+				3D9570342D3296AC009A3FDC /* PoloLifestyleMagazineUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		3DC857AA2D33129E00169FDB /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		3D9570192D3296AA009A3FDC /* PoloLifestyleMagazine */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3D95703E2D3296AC009A3FDC /* Build configuration list for PBXNativeTarget "PoloLifestyleMagazine" */;
+			buildPhases = (
+				3D9570162D3296AA009A3FDC /* Sources */,
+				3D9570172D3296AA009A3FDC /* Frameworks */,
+				3D9570182D3296AA009A3FDC /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				3D95701C2D3296AA009A3FDC /* PoloLifestyleMagazine */,
+			);
+			name = PoloLifestyleMagazine;
+			packageProductDependencies = (
+				3DC857AB2D33129E00169FDB /* PostgREST */,
+				3DC857AD2D3312B100169FDB /* Supabase */,
+			);
+			productName = PoloLifestyleMagazine;
+			productReference = 3D95701A2D3296AA009A3FDC /* PoloLifestyleMagazine.app */;
+			productType = "com.apple.product-type.application";
+		};
+		3D9570292D3296AC009A3FDC /* PoloLifestyleMagazineTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3D9570412D3296AC009A3FDC /* Build configuration list for PBXNativeTarget "PoloLifestyleMagazineTests" */;
+			buildPhases = (
+				3D9570262D3296AC009A3FDC /* Sources */,
+				3D9570272D3296AC009A3FDC /* Frameworks */,
+				3D9570282D3296AC009A3FDC /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				3D95702C2D3296AC009A3FDC /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				3D95702D2D3296AC009A3FDC /* PoloLifestyleMagazineTests */,
+			);
+			name = PoloLifestyleMagazineTests;
+			packageProductDependencies = (
+			);
+			productName = PoloLifestyleMagazineTests;
+			productReference = 3D95702A2D3296AC009A3FDC /* PoloLifestyleMagazineTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		3D9570332D3296AC009A3FDC /* PoloLifestyleMagazineUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3D9570442D3296AC009A3FDC /* Build configuration list for PBXNativeTarget "PoloLifestyleMagazineUITests" */;
+			buildPhases = (
+				3D9570302D3296AC009A3FDC /* Sources */,
+				3D9570312D3296AC009A3FDC /* Frameworks */,
+				3D9570322D3296AC009A3FDC /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				3D9570362D3296AC009A3FDC /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				3D9570372D3296AC009A3FDC /* PoloLifestyleMagazineUITests */,
+			);
+			name = PoloLifestyleMagazineUITests;
+			packageProductDependencies = (
+			);
+			productName = PoloLifestyleMagazineUITests;
+			productReference = 3D9570342D3296AC009A3FDC /* PoloLifestyleMagazineUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		3D9570122D3296AA009A3FDC /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					3D9570192D3296AA009A3FDC = {
+						CreatedOnToolsVersion = 16.0;
+					};
+					3D9570292D3296AC009A3FDC = {
+						CreatedOnToolsVersion = 16.0;
+						TestTargetID = 3D9570192D3296AA009A3FDC;
+					};
+					3D9570332D3296AC009A3FDC = {
+						CreatedOnToolsVersion = 16.0;
+						TestTargetID = 3D9570192D3296AA009A3FDC;
+					};
+				};
+			};
+			buildConfigurationList = 3D9570152D3296AA009A3FDC /* Build configuration list for PBXProject "PoloLifestyleMagazine" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 3D9570112D3296AA009A3FDC;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				3D9570812D330FA1009A3FDC /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 3D95701B2D3296AA009A3FDC /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				3D9570192D3296AA009A3FDC /* PoloLifestyleMagazine */,
+				3D9570292D3296AC009A3FDC /* PoloLifestyleMagazineTests */,
+				3D9570332D3296AC009A3FDC /* PoloLifestyleMagazineUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		3D9570182D3296AA009A3FDC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3D9570282D3296AC009A3FDC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3D9570322D3296AC009A3FDC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		3D9570162D3296AA009A3FDC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3D9570262D3296AC009A3FDC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3D9570302D3296AC009A3FDC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		3D95702C2D3296AC009A3FDC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3D9570192D3296AA009A3FDC /* PoloLifestyleMagazine */;
+			targetProxy = 3D95702B2D3296AC009A3FDC /* PBXContainerItemProxy */;
+		};
+		3D9570362D3296AC009A3FDC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3D9570192D3296AA009A3FDC /* PoloLifestyleMagazine */;
+			targetProxy = 3D9570352D3296AC009A3FDC /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		3D95703C2D3296AC009A3FDC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		3D95703D2D3296AC009A3FDC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		3D95703F2D3296AC009A3FDC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"PoloLifestyleMagazine/Preview Content\"";
+				DEVELOPMENT_TEAM = W67AW8RFW4;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.books";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gw.PoloLifestyle.PoloLifestyleMagazine;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		3D9570402D3296AC009A3FDC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"PoloLifestyleMagazine/Preview Content\"";
+				DEVELOPMENT_TEAM = W67AW8RFW4;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.books";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gw.PoloLifestyle.PoloLifestyleMagazine;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		3D9570422D3296AC009A3FDC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = W67AW8RFW4;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gw.PoloLifestyle.PoloLifestyleMagazineTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PoloLifestyleMagazine.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PoloLifestyleMagazine";
+			};
+			name = Debug;
+		};
+		3D9570432D3296AC009A3FDC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = W67AW8RFW4;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gw.PoloLifestyle.PoloLifestyleMagazineTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PoloLifestyleMagazine.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PoloLifestyleMagazine";
+			};
+			name = Release;
+		};
+		3D9570452D3296AC009A3FDC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = W67AW8RFW4;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gw.PoloLifestyle.PoloLifestyleMagazineUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = PoloLifestyleMagazine;
+			};
+			name = Debug;
+		};
+		3D9570462D3296AC009A3FDC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = W67AW8RFW4;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gw.PoloLifestyle.PoloLifestyleMagazineUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = PoloLifestyleMagazine;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		3D9570152D3296AA009A3FDC /* Build configuration list for PBXProject "PoloLifestyleMagazine" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3D95703C2D3296AC009A3FDC /* Debug */,
+				3D95703D2D3296AC009A3FDC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3D95703E2D3296AC009A3FDC /* Build configuration list for PBXNativeTarget "PoloLifestyleMagazine" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3D95703F2D3296AC009A3FDC /* Debug */,
+				3D9570402D3296AC009A3FDC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3D9570412D3296AC009A3FDC /* Build configuration list for PBXNativeTarget "PoloLifestyleMagazineTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3D9570422D3296AC009A3FDC /* Debug */,
+				3D9570432D3296AC009A3FDC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3D9570442D3296AC009A3FDC /* Build configuration list for PBXNativeTarget "PoloLifestyleMagazineUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3D9570452D3296AC009A3FDC /* Debug */,
+				3D9570462D3296AC009A3FDC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		3D9570812D330FA1009A3FDC /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase-community/supabase-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		3DC857AB2D33129E00169FDB /* PostgREST */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3D9570812D330FA1009A3FDC /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = PostgREST;
+		};
+		3DC857AD2D3312B100169FDB /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3D9570812D330FA1009A3FDC /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 3D9570122D3296AA009A3FDC /* Project object */;
+}
