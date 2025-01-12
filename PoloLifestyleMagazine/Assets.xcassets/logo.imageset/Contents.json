@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "appicon.jpg",
+      "filename" : "bd7888eb-ff08-471a-ad38-59f3d313a4a6.jpg",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "appicon@2x.jpg",
+      "filename" : "bd7888eb-ff08-471a-ad38-59f3d313a4a6@2x.jpg",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "appicon@3x.jpg",
+      "filename" : "bd7888eb-ff08-471a-ad38-59f3d313a4a6@3x.jpg",
       "idiom" : "universal",
       "scale" : "3x"
     }
