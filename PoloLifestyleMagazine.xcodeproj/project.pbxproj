@@ -9,7 +9,9 @@
 /* Begin PBXBuildFile section */
 		3DC857AC2D33129E00169FDB /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = 3DC857AB2D33129E00169FDB /* PostgREST */; };
 		3DC857AE2D3312B100169FDB /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 3DC857AD2D3312B100169FDB /* Supabase */; };
-		3DC857B42D33300E00169FDB /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3DC857B32D33300E00169FDB /* LaunchScreen.storyboard */; };
+		3DC857DD2D3431C600169FDB /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3DC857DC2D3431C600169FDB /* Launch Screen.storyboard */; };
+		3DC857DE2D3431C600169FDB /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3DC857DC2D3431C600169FDB /* Launch Screen.storyboard */; };
+		3DC857DF2D3431C600169FDB /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3DC857DC2D3431C600169FDB /* Launch Screen.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -33,7 +35,7 @@
 		3D95701A2D3296AA009A3FDC /* PoloLifestyleMagazine.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PoloLifestyleMagazine.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3D95702A2D3296AC009A3FDC /* PoloLifestyleMagazineTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PoloLifestyleMagazineTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3D9570342D3296AC009A3FDC /* PoloLifestyleMagazineUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PoloLifestyleMagazineUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		3DC857B32D33300E00169FDB /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
+		3DC857DC2D3431C600169FDB /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = "Launch Screen.storyboard"; path = "PoloLifestyleMagazine/Launch Screen.storyboard"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -84,7 +86,7 @@
 		3D9570112D3296AA009A3FDC = {
 			isa = PBXGroup;
 			children = (
-				3DC857B32D33300E00169FDB /* LaunchScreen.storyboard */,
+				3DC857DC2D3431C600169FDB /* Launch Screen.storyboard */,
 				3D95701C2D3296AA009A3FDC /* PoloLifestyleMagazine */,
 				3D95702D2D3296AC009A3FDC /* PoloLifestyleMagazineTests */,
 				3D9570372D3296AC009A3FDC /* PoloLifestyleMagazineUITests */,
@@ -235,7 +237,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3DC857B42D33300E00169FDB /* LaunchScreen.storyboard in Resources */,
+				3DC857DE2D3431C600169FDB /* Launch Screen.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -243,6 +245,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3DC857DD2D3431C600169FDB /* Launch Screen.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -250,6 +253,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3DC857DF2D3431C600169FDB /* Launch Screen.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -417,6 +421,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = PoloLifestyleMagazine/PoloLifestyleMagazine.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -428,6 +433,7 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = "Launch Screen.storyboard";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
@@ -454,6 +460,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = PoloLifestyleMagazine/PoloLifestyleMagazine.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -465,6 +472,7 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = "Launch Screen.storyboard";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.6;

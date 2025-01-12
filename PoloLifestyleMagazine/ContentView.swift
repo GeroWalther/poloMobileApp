@@ -69,7 +69,27 @@ struct ContentView: View {
                 }
             }
             .navigationTitle("POLO&Lifestyle")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    HStack {
+                        HStack(alignment: .firstTextBaseline, spacing: 0) {
+                            Text("POLO")
+                                .font(.custom("Times New Roman", size: 48))
+                                .fontWeight(.regular)
+                            Text("&")
+                                .font(.custom("Times New Roman", size: 30))
+                                .fontWeight(.regular)
+                            Text("LIFESTYLE")
+                                .font(.custom("Times New Roman", size: 38))
+                                .fontWeight(.regular)
+                        }
+                        .foregroundColor(Color(UIColor(red: 0.1, green: 0.1, blue: 0.1, alpha: 1.0)))
+                        .padding(.vertical, 20)
+                        Spacer()
+                    }
+                }
+            }
             .toolbarBackground(
                 Color(UIColor(red: 0.85, green: 0.85, blue: 0.85, alpha: 1.0)),
                 for: .navigationBar
