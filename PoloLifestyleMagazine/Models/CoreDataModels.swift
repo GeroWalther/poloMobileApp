@@ -1,6 +1,21 @@
 import Foundation
 import CoreData
 
+@objc(ArticleImagesTransformer)
+class ArticleImagesTransformer: NSSecureUnarchiveFromDataTransformer {
+    
+    static let name = NSValueTransformerName(rawValue: String(describing: ArticleImagesTransformer.self))
+    
+    override static var allowedTopLevelClasses: [AnyClass] {
+        return [NSArray.self, NSString.self]
+    }
+    
+    static func register() {
+        let transformer = ArticleImagesTransformer()
+        ValueTransformer.setValueTransformer(transformer, forName: name)
+    }
+}
+
 class PersistenceController {
     static let shared = PersistenceController()
     
@@ -17,6 +32,33 @@ class PersistenceController {
     }
 }
 
+// MARK: - CoreData Conversions
+extension CDMagazine {
+    func toMagazine() -> Magazine {
+        Magazine(
+            id: Int(id),
+            title: title ?? "",
+            description: desc ?? "",
+            pdf: pdf ?? "",
+            createdAt: createdAt ?? ""
+        )
+    }
+}
+
+extension CDArticle {
+    func toArticle() -> Article {
+        Article(
+            id: id ?? "",
+            title: title ?? "",
+            description: desc ?? "",
+            titleImage: titleImage ?? "",
+            images: images as? [String],
+            createdAt: createdAt
+        )
+    }
+}
+
+// MARK: - Model to CoreData Conversions
 extension Magazine {
     func toCoreData(context: NSManagedObjectContext) -> CDMagazine {
         let cdMagazine = CDMagazine(context: context)
@@ -41,30 +83,5 @@ extension Article {
         cdArticle.createdAt = createdAt
         cdArticle.lastFetchedAt = Date()
         return cdArticle
-    }
-}
-
-extension CDMagazine {
-    func toMagazine() -> Magazine {
-        Magazine(
-            id: Int(id),
-            title: title ?? "",
-            description: desc ?? "",
-            pdf: pdf ?? "",
-            createdAt: createdAt ?? ""
-        )
-    }
-}
-
-extension CDArticle {
-    func toArticle() -> Article {
-        Article(
-            id: id ?? "",
-            title: title ?? "",
-            description: desc ?? "",
-            titleImage: titleImage ?? "",
-            images: images as? [String],
-            createdAt: createdAt
-        )
     }
 }

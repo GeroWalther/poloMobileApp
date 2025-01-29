@@ -14,6 +14,9 @@ struct PoloLifestyleMagazineApp: App {
     let pdfCache = PDFCache.shared
     
     init() {
+        // Register the secure transformer
+        ArticleImagesTransformer.register()
+        
         // Configure navigation bar appearance
         let navBarAppearance = UINavigationBarAppearance()
         

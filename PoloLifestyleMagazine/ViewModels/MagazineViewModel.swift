@@ -20,26 +20,30 @@ class MagazineViewModel: ObservableObject {
     }
     
     private func loadCachedData() {
-        let magazinesFetch = NSFetchRequest<CDMagazine>(entityName: "CDMagazine")
-        magazinesFetch.predicate = NSPredicate(
-            format: "lastFetchedAt > %@",
-            Date().addingTimeInterval(-cacheValidityDuration) as NSDate
-        )
-        
-        let articlesFetch = NSFetchRequest<CDArticle>(entityName: "CDArticle")
-        articlesFetch.predicate = NSPredicate(
-            format: "lastFetchedAt > %@",
-            Date().addingTimeInterval(-cacheValidityDuration) as NSDate
-        )
-        
-        do {
-            let cdMagazines = try context.fetch(magazinesFetch)
-            magazines = cdMagazines.map { $0.toMagazine() }
+        Task {
+            let magazinesFetch = NSFetchRequest<CDMagazine>(entityName: "CDMagazine")
+            magazinesFetch.predicate = NSPredicate(
+                format: "lastFetchedAt > %@",
+                Date().addingTimeInterval(-cacheValidityDuration) as NSDate
+            )
             
-            let cdArticles = try context.fetch(articlesFetch)
-            articles = cdArticles.map { $0.toArticle() }
-        } catch {
-            logger.error("Failed to load cached data: \(error)")
+            let articlesFetch = NSFetchRequest<CDArticle>(entityName: "CDArticle")
+            articlesFetch.predicate = NSPredicate(
+                format: "lastFetchedAt > %@",
+                Date().addingTimeInterval(-cacheValidityDuration) as NSDate
+            )
+            
+            do {
+                let cdMagazines = try context.fetch(magazinesFetch)
+                let cdArticles = try context.fetch(articlesFetch)
+                
+                await MainActor.run {
+                    self.magazines = cdMagazines.map { $0.toMagazine() }
+                    self.articles = cdArticles.map { $0.toArticle() }
+                }
+            } catch {
+                logger.error("Failed to load cached data: \(error)")
+            }
         }
     }
     
@@ -55,7 +59,7 @@ class MagazineViewModel: ObservableObject {
     
     func fetchMagazines(forceRefresh: Bool = false) async {
         if !forceRefresh {
-            // First try to load from CoreData
+            // Check cache first
             let fetchRequest = NSFetchRequest<CDMagazine>(entityName: "CDMagazine")
             fetchRequest.predicate = NSPredicate(
                 format: "lastFetchedAt > %@",
