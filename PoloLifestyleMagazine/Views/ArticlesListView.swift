@@ -65,7 +65,7 @@ struct ArticlesListView: View {
                             .padding()
                         }
                         .refreshable {
-                            await viewModel.fetchArticles()
+                            await viewModel.fetchArticles(forceRefresh: true)
                         }
                     }
                 }

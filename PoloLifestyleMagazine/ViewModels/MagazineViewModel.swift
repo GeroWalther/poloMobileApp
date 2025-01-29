@@ -1,19 +1,79 @@
 import Foundation
 import Combine
 import OSLog
+import CoreData
 
 @MainActor
 class MagazineViewModel: ObservableObject {
     @Published private(set) var magazines: [Magazine] = []
+    @Published private(set) var articles: [Article] = []
     @Published private(set) var isLoading = false
     @Published private(set) var error: Error?
-    @Published private(set) var articles: [Article] = []
     
     private let supabase = SupabaseService.shared
     private let logger = Logger(subsystem: "com.gw.PoloLifestyle", category: "MagazineViewModel")
+    private let context = PersistenceController.shared.container.viewContext
+    private let cacheValidityDuration: TimeInterval = 300 // 5 minutes
     
-    func fetchMagazines() async {
-        if isLoading { return }  // Prevent multiple simultaneous fetches
+    init() {
+        loadCachedData()
+    }
+    
+    private func loadCachedData() {
+        let magazinesFetch = NSFetchRequest<CDMagazine>(entityName: "CDMagazine")
+        magazinesFetch.predicate = NSPredicate(
+            format: "lastFetchedAt > %@",
+            Date().addingTimeInterval(-cacheValidityDuration) as NSDate
+        )
+        
+        let articlesFetch = NSFetchRequest<CDArticle>(entityName: "CDArticle")
+        articlesFetch.predicate = NSPredicate(
+            format: "lastFetchedAt > %@",
+            Date().addingTimeInterval(-cacheValidityDuration) as NSDate
+        )
+        
+        do {
+            let cdMagazines = try context.fetch(magazinesFetch)
+            magazines = cdMagazines.map { $0.toMagazine() }
+            
+            let cdArticles = try context.fetch(articlesFetch)
+            articles = cdArticles.map { $0.toArticle() }
+        } catch {
+            logger.error("Failed to load cached data: \(error)")
+        }
+    }
+    
+    private func saveContext() {
+        if context.hasChanges {
+            do {
+                try context.save()
+            } catch {
+                logger.error("Failed to save context: \(error)")
+            }
+        }
+    }
+    
+    func fetchMagazines(forceRefresh: Bool = false) async {
+        if !forceRefresh && !magazines.isEmpty {
+            // Check cache
+            let fetch = NSFetchRequest<CDMagazine>(entityName: "CDMagazine")
+            fetch.predicate = NSPredicate(
+                format: "lastFetchedAt > %@",
+                Date().addingTimeInterval(-cacheValidityDuration) as NSDate
+            )
+            
+            do {
+                let cached = try context.fetch(fetch)
+                if !cached.isEmpty {
+                    logger.debug("Using cached magazines")
+                    return
+                }
+            } catch {
+                logger.error("Failed to check cache: \(error)")
+            }
+        }
+        
+        if isLoading { return }
         
         isLoading = true
         error = nil
@@ -29,33 +89,22 @@ class MagazineViewModel: ObservableObject {
             let decoder = JSONDecoder()
             let newMagazines = try decoder.decode([Magazine].self, from: response.data)
             
-            // Update state in a single batch
+            // Save to Core Data
+            let batch = NSBatchDeleteRequest(fetchRequest: NSFetchRequest<NSFetchRequestResult>(entityName: "CDMagazine"))
+            _ = try? context.execute(batch)
+            
+            newMagazines.forEach { magazine in
+                _ = magazine.toCoreData(context: context)
+            }
+            saveContext()
+            
             await MainActor.run {
                 self.magazines = newMagazines
                 self.error = nil
                 self.isLoading = false
             }
             
-            // Log after state updates
             logger.info("Successfully fetched \(newMagazines.count) magazines")
-            
-            #if DEBUG
-            if let jsonString = String(data: response.data, encoding: .utf8) {
-                logger.debug("Raw JSON response: \(jsonString)")
-            }
-            
-            for magazine in newMagazines {
-                logger.debug("""
-                    Magazine:
-                    - Title: \(magazine.title)
-                    - ID: \(magazine.id)
-                    - Description: \(magazine.description)
-                    - PDF URL: \(magazine.pdf)
-                    - Created at: \(magazine.createdAt)
-                    ---
-                    """)
-            }
-            #endif
             
         } catch {
             await MainActor.run {
@@ -66,7 +115,25 @@ class MagazineViewModel: ObservableObject {
         }
     }
     
-    func fetchArticles() async {
+    func fetchArticles(forceRefresh: Bool = false) async {
+        if !forceRefresh && !articles.isEmpty {
+            let cachedArticles = NSFetchRequest<CDArticle>(entityName: "CDArticle")
+            cachedArticles.predicate = NSPredicate(
+                format: "lastFetchedAt > %@",
+                Date().addingTimeInterval(-cacheValidityDuration) as NSDate
+            )
+            
+            do {
+                let cached = try context.fetch(cachedArticles)
+                if !cached.isEmpty {
+                    logger.debug("Using cached articles")
+                    return
+                }
+            } catch {
+                logger.error("Failed to check cache: \(error)")
+            }
+        }
+        
         if isLoading { return }
         
         isLoading = true
@@ -81,24 +148,17 @@ class MagazineViewModel: ObservableObject {
                 .select()
                 .execute()
             
-            logger.debug("Got response from Supabase")
-            
-            #if DEBUG
-            if let jsonString = String(data: response.data, encoding: .utf8) {
-                logger.debug("Raw JSON response for articles: \(jsonString)")
-                
-                // Try to parse the raw response to see what we're getting
-                do {
-                    let anyJson = try JSONSerialization.jsonObject(with: response.data)
-                    logger.debug("Raw response structure: \(String(describing: anyJson))")
-                } catch {
-                    logger.error("Failed to parse raw JSON: \(error)")
-                }
-            }
-            #endif
-            
             let decoder = JSONDecoder()
             let newArticles = try decoder.decode([Article].self, from: response.data)
+            
+            // Save to Core Data
+            let batch = NSBatchDeleteRequest(fetchRequest: NSFetchRequest<NSFetchRequestResult>(entityName: "CDArticle"))
+            _ = try? context.execute(batch)
+            
+            newArticles.forEach { article in
+                _ = article.toCoreData(context: context)
+            }
+            saveContext()
             
             await MainActor.run {
                 self.articles = newArticles
@@ -115,6 +175,12 @@ class MagazineViewModel: ObservableObject {
                 self.isLoading = false
             }
         }
+    }
+    
+    // Function to force refresh all data
+    func refreshAll() async {
+        await fetchMagazines(forceRefresh: true)
+        await fetchArticles(forceRefresh: true)
     }
     
     func fetchArticlesDirectly() async {

@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3DAB0F4A2D4A894A0072F6A8 /* PoloLifestyleMagazine.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 3DAB0F482D4A894A0072F6A8 /* PoloLifestyleMagazine.xcdatamodeld */; };
+		3DAB0F4B2D4A894A0072F6A8 /* PoloLifestyleMagazine.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 3DAB0F482D4A894A0072F6A8 /* PoloLifestyleMagazine.xcdatamodeld */; };
+		3DAB0F4C2D4A894A0072F6A8 /* PoloLifestyleMagazine.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 3DAB0F482D4A894A0072F6A8 /* PoloLifestyleMagazine.xcdatamodeld */; };
 		3DC857AC2D33129E00169FDB /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = 3DC857AB2D33129E00169FDB /* PostgREST */; };
 		3DC857AE2D3312B100169FDB /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 3DC857AD2D3312B100169FDB /* Supabase */; };
 		3DC857DD2D3431C600169FDB /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3DC857DC2D3431C600169FDB /* Launch Screen.storyboard */; };
@@ -35,6 +38,7 @@
 		3D95701A2D3296AA009A3FDC /* PoloLifestyleMagazine.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PoloLifestyleMagazine.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3D95702A2D3296AC009A3FDC /* PoloLifestyleMagazineTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PoloLifestyleMagazineTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3D9570342D3296AC009A3FDC /* PoloLifestyleMagazineUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PoloLifestyleMagazineUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		3DAB0F492D4A894A0072F6A8 /* PoloLifestyleMagazine.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = PoloLifestyleMagazine.xcdatamodel; sourceTree = "<group>"; };
 		3DC857DC2D3431C600169FDB /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = "Launch Screen.storyboard"; path = "PoloLifestyleMagazine/Launch Screen.storyboard"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -86,6 +90,7 @@
 		3D9570112D3296AA009A3FDC = {
 			isa = PBXGroup;
 			children = (
+				3DAB0F482D4A894A0072F6A8 /* PoloLifestyleMagazine.xcdatamodeld */,
 				3DC857DC2D3431C600169FDB /* Launch Screen.storyboard */,
 				3D95701C2D3296AA009A3FDC /* PoloLifestyleMagazine */,
 				3D95702D2D3296AC009A3FDC /* PoloLifestyleMagazineTests */,
@@ -264,6 +269,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3DAB0F4C2D4A894A0072F6A8 /* PoloLifestyleMagazine.xcdatamodeld in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -271,6 +277,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3DAB0F4B2D4A894A0072F6A8 /* PoloLifestyleMagazine.xcdatamodeld in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -278,6 +285,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3DAB0F4A2D4A894A0072F6A8 /* PoloLifestyleMagazine.xcdatamodeld in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -434,8 +442,7 @@
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = "Launch Screen.storyboard";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -473,8 +480,7 @@
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = "Launch Screen.storyboard";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -642,6 +648,19 @@
 			productName = Supabase;
 		};
 /* End XCSwiftPackageProductDependency section */
+
+/* Begin XCVersionGroup section */
+		3DAB0F482D4A894A0072F6A8 /* PoloLifestyleMagazine.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				3DAB0F492D4A894A0072F6A8 /* PoloLifestyleMagazine.xcdatamodel */,
+			);
+			currentVersion = 3DAB0F492D4A894A0072F6A8 /* PoloLifestyleMagazine.xcdatamodel */;
+			path = PoloLifestyleMagazine.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
 	};
 	rootObject = 3D9570122D3296AA009A3FDC /* Project object */;
 }
