@@ -72,6 +72,16 @@ struct ArticlesListView: View {
             }
             .navigationTitle("Articles")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    PoloLifestyleHeader()
+                }
+            }
+            .toolbarBackground(
+                Color(UIColor(red: 0.85, green: 0.85, blue: 0.85, alpha: 1.0)),
+                for: .navigationBar
+            )
+            .toolbarBackground(.visible, for: .navigationBar)
             .task {
                 await viewModel.fetchArticles()
                 await viewModel.fetchArticlesDirectly()
@@ -103,11 +113,15 @@ struct ArticleRowView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(article.title)
                     .font(.headline)
-                    .foregroundColor(.primary)
+                    .foregroundColor(.black)
+                
+                Text(article.description)
+                    .font(.subheadline)
+                    .foregroundColor(.black.opacity(0.8))
                 
                 Text(article.publishDate, style: .date)
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.black.opacity(0.6))
             }
             .padding(.horizontal, 4)
         }

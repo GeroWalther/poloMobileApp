@@ -5,8 +5,8 @@ struct ArticleDetailView: View {
     
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                // Title Image
+            VStack(alignment: .leading, spacing: 16) {
+                // Hero Image
                 AsyncImage(url: URL(string: article.titleImage)) { image in
                     image
                         .resizable()
@@ -20,47 +20,54 @@ struct ArticleDetailView: View {
                         )
                 }
                 .frame(height: 300)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .clipped()
                 
                 VStack(alignment: .leading, spacing: 12) {
                     // Title
                     Text(article.title)
-                        .font(.title)
-                        .fontWeight(.bold)
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundColor(.black)
                     
                     // Date
                     Text(article.publishDate, style: .date)
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.black.opacity(0.6))
                     
                     // Description
                     Text(article.description)
                         .font(.body)
-                        .padding(.vertical)
+                        .foregroundColor(.black)
+                        .lineSpacing(6)
                     
                     // Additional Images
-                    ForEach(article.images ?? [], id: \.self) { imageUrl in
-                        AsyncImage(url: URL(string: imageUrl)) { image in
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        } placeholder: {
-                            Rectangle()
-                                .fill(Color.gray.opacity(0.2))
-                                .overlay(
-                                    ProgressView()
-                                        .tint(.gray)
-                                )
+                    if let images = article.images {
+                        ForEach(images, id: \.self) { imageUrl in
+                            AsyncImage(url: URL(string: imageUrl)) { image in
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                            } placeholder: {
+                                Rectangle()
+                                    .fill(Color.gray.opacity(0.2))
+                                    .aspectRatio(16/9, contentMode: .fit)
+                                    .overlay(
+                                        ProgressView()
+                                            .tint(.gray)
+                                    )
+                            }
                         }
-                        .frame(height: 200)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
                 }
                 .padding()
             }
         }
-        .background(Color(UIColor(red: 0.95, green: 0.95, blue: 0.95, alpha: 1.0)))
+        .background(Color.white)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                PoloLifestyleHeader()
+            }
+        }
         .onAppear {
             #if DEBUG
             print("Article Detail View appeared for article: \(article.title)")

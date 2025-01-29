@@ -54,22 +54,23 @@ class MagazineViewModel: ObservableObject {
     }
     
     func fetchMagazines(forceRefresh: Bool = false) async {
-        if !forceRefresh && !magazines.isEmpty {
-            // Check cache
-            let fetch = NSFetchRequest<CDMagazine>(entityName: "CDMagazine")
-            fetch.predicate = NSPredicate(
+        if !forceRefresh {
+            // First try to load from CoreData
+            let fetchRequest = NSFetchRequest<CDMagazine>(entityName: "CDMagazine")
+            fetchRequest.predicate = NSPredicate(
                 format: "lastFetchedAt > %@",
                 Date().addingTimeInterval(-cacheValidityDuration) as NSDate
             )
             
             do {
-                let cached = try context.fetch(fetch)
-                if !cached.isEmpty {
+                let storedMagazines = try context.fetch(fetchRequest)
+                if !storedMagazines.isEmpty {
                     logger.debug("Using cached magazines")
+                    self.magazines = storedMagazines.map { $0.toMagazine() }
                     return
                 }
             } catch {
-                logger.error("Failed to check cache: \(error)")
+                logger.error("CoreData fetch failed: \(error)")
             }
         }
         
@@ -78,6 +79,7 @@ class MagazineViewModel: ObservableObject {
         isLoading = true
         error = nil
         
+        // Fetch from network
         do {
             let response = try await supabase.client
                 .database
@@ -98,39 +100,36 @@ class MagazineViewModel: ObservableObject {
             }
             saveContext()
             
-            await MainActor.run {
-                self.magazines = newMagazines
-                self.error = nil
-                self.isLoading = false
-            }
+            self.magazines = newMagazines
+            self.error = nil
+            self.isLoading = false
             
             logger.info("Successfully fetched \(newMagazines.count) magazines")
             
         } catch {
-            await MainActor.run {
-                self.error = error
-                self.isLoading = false
-            }
+            self.error = error
+            self.isLoading = false
             logger.error("Failed to fetch magazines: \(error)")
         }
     }
     
     func fetchArticles(forceRefresh: Bool = false) async {
-        if !forceRefresh && !articles.isEmpty {
-            let cachedArticles = NSFetchRequest<CDArticle>(entityName: "CDArticle")
-            cachedArticles.predicate = NSPredicate(
+        if !forceRefresh {
+            let fetchRequest = NSFetchRequest<CDArticle>(entityName: "CDArticle")
+            fetchRequest.predicate = NSPredicate(
                 format: "lastFetchedAt > %@",
                 Date().addingTimeInterval(-cacheValidityDuration) as NSDate
             )
             
             do {
-                let cached = try context.fetch(cachedArticles)
-                if !cached.isEmpty {
+                let storedArticles = try context.fetch(fetchRequest)
+                if !storedArticles.isEmpty {
                     logger.debug("Using cached articles")
+                    self.articles = storedArticles.map { $0.toArticle() }
                     return
                 }
             } catch {
-                logger.error("Failed to check cache: \(error)")
+                logger.error("CoreData fetch failed: \(error)")
             }
         }
         
@@ -160,20 +159,16 @@ class MagazineViewModel: ObservableObject {
             }
             saveContext()
             
-            await MainActor.run {
-                self.articles = newArticles
-                self.error = nil
-                self.isLoading = false
-            }
+            self.articles = newArticles
+            self.error = nil
+            self.isLoading = false
             
             logger.info("Successfully fetched \(newArticles.count) articles")
             
         } catch {
-            logger.error("Failed to fetch articles: \(error.localizedDescription)")
-            await MainActor.run {
-                self.error = error
-                self.isLoading = false
-            }
+            self.error = error
+            self.isLoading = false
+            logger.error("Failed to fetch articles: \(error)")
         }
     }
     
