@@ -1,6 +1,5 @@
 import Foundation
 import Supabase
-import PostgREST
 
 final class SupabaseService {
     static let shared = SupabaseService()

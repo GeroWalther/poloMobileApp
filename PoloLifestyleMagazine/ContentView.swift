@@ -11,6 +11,27 @@ struct ContentView: View {
     @EnvironmentObject private var viewModel: MagazineViewModel
     
     var body: some View {
+        TabView {
+            // Magazines Tab
+            MagazinesView()
+                .tabItem {
+                    Label("Magazines", systemImage: "magazine")
+                }
+            
+            // Articles Tab
+            ArticlesListView()
+                .tabItem {
+                    Label("Articles", systemImage: "newspaper")
+                }
+        }
+    }
+}
+
+// Move existing magazine view content to a new view
+struct MagazinesView: View {
+    @EnvironmentObject private var viewModel: MagazineViewModel
+    
+    var body: some View {
         NavigationView {
             ZStack {
                 // Background gradient with grey tones
