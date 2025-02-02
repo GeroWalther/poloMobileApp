@@ -130,6 +130,7 @@ class MagazineViewModel: ObservableObject {
                 if !storedArticles.isEmpty {
                     logger.debug("Using cached articles")
                     self.articles = storedArticles.map { $0.toArticle() }
+                        .sorted { $0.publishDate > $1.publishDate }
                     return
                 }
             } catch {
@@ -149,6 +150,7 @@ class MagazineViewModel: ObservableObject {
                 .database
                 .from("articles")
                 .select()
+                .order("created_at", ascending: false)
                 .execute()
             
             let decoder = JSONDecoder()
@@ -160,10 +162,11 @@ class MagazineViewModel: ObservableObject {
             
             newArticles.forEach { article in
                 _ = article.toCoreData(context: context)
+                logger.debug("Article: \(article.title), Date: \(article.publishDate)")
             }
             saveContext()
             
-            self.articles = newArticles
+            self.articles = newArticles.sorted { $0.publishDate > $1.publishDate }
             self.error = nil
             self.isLoading = false
             

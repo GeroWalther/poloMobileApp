@@ -47,13 +47,20 @@ extension CDMagazine {
 
 extension CDArticle {
     func toArticle() -> Article {
-        Article(
+        // Convert stored sections data back to [Section]
+        var decodedSections: [Article.Section]?
+        if let sectionsData = self.sectionsData {
+            let decoder = JSONDecoder()
+            decodedSections = try? decoder.decode([Article.Section].self, from: sectionsData)
+        }
+        
+        return Article(
             id: id ?? "",
             title: title ?? "",
             description: desc ?? "",
             titleImage: titleImage ?? "",
-            images: images as? [String],
-            createdAt: createdAt
+            createdAt: createdAt,
+            sections: decodedSections
         )
     }
 }
@@ -79,8 +86,16 @@ extension Article {
         cdArticle.title = title
         cdArticle.desc = description
         cdArticle.titleImage = titleImage
-        cdArticle.images = images as NSArray?
         cdArticle.createdAt = createdAt
+        
+        // Convert sections to JSON data for storage
+        if let sections = sections {
+            let encoder = JSONEncoder()
+            if let sectionsData = try? encoder.encode(sections) {
+                cdArticle.sectionsData = sectionsData
+            }
+        }
+        
         cdArticle.lastFetchedAt = Date()
         return cdArticle
     }

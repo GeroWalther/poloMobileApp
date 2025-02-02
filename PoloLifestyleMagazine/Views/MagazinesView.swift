@@ -3,6 +3,7 @@ import PDFKit
 
 struct MagazinesView: View {
     @StateObject private var viewModel = MagazineViewModel()
+    @State private var selectedMagazine: Magazine? = nil
     
     var body: some View {
         NavigationView {
@@ -61,7 +62,9 @@ struct MagazinesView: View {
                                     GridItem(.adaptive(minimum: geometry.size.width > geometry.size.height ? 400 : 300), spacing: 20)
                                 ], spacing: 20) {
                                     ForEach(viewModel.magazines) { magazine in
-                                        NavigationLink(destination: MagazineReaderView(magazine: magazine)) {
+                                        Button {
+                                            selectedMagazine = magazine
+                                        } label: {
                                             MagazineCoverView(magazine: magazine)
                                                 .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
                                         }
@@ -75,15 +78,18 @@ struct MagazinesView: View {
                         }
                     }
                 }
-            }
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    PoloLifestyleHeader()
+                .toolbar {
+                    ToolbarItem(placement: .principal) {
+                        PoloLifestyleHeader()
+                    }
+                }
+                .task {
+                    await viewModel.fetchMagazines()
                 }
             }
-            .task {
-                await viewModel.fetchMagazines()
-            }
+        }
+        .fullScreenCover(item: $selectedMagazine) { magazine in
+            MagazineReaderView(magazine: magazine)
         }
     }
 }

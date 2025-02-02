@@ -4,7 +4,7 @@
         <attribute name="createdAt" optional="YES" attributeType="String"/>
         <attribute name="desc" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="String"/>
-        <attribute name="images" optional="YES" attributeType="Transformable" customClassName="NSArray"/>
+        <attribute name="sectionsData" optional="YES" attributeType="Binary"/>
         <attribute name="lastFetchedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="title" optional="YES" attributeType="String"/>
         <attribute name="titleImage" optional="YES" attributeType="String"/>

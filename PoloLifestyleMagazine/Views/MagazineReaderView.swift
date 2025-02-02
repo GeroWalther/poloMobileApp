@@ -3,6 +3,7 @@ import PDFKit
 
 struct MagazineReaderView: View {
     let magazine: Magazine
+    @Environment(\.dismiss) private var dismiss
     @State private var pdfDocument: PDFDocument?
     @State private var currentPage = 0
     @State private var totalPages = 0
@@ -111,11 +112,39 @@ struct MagazineReaderView: View {
                             .padding(.bottom, 20)
                     }
                 }
+                
+                // Add close button
+                VStack {
+                    HStack {
+                        Button {
+                            dismiss()
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.title)
+                                .foregroundColor(.gray)
+                        }
+                        .padding()
+                        Spacer()
+                    }
+                    Spacer()
+                }
             }
         }
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             loadPDF()
+            // Hide tab bar when view appears
+            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let tabBarController = windowScene.windows.first?.rootViewController?.tabBarController {
+                tabBarController.tabBar.isHidden = true
+            }
+        }
+        .onDisappear {
+            // Show tab bar when view disappears
+            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let tabBarController = windowScene.windows.first?.rootViewController?.tabBarController {
+                tabBarController.tabBar.isHidden = false
+            }
         }
     }
     

@@ -1,32 +1,31 @@
 import Foundation
 
-struct Article: Identifiable, Codable {
-    let id: String
+struct Article: Codable, Identifiable {
+    let id: UUID
+    let createdAt: Date
     let title: String
     let description: String
     let titleImage: String
-    let createdAt: String?
     let sections: [Section]?
     
     struct Section: Codable {
         let subheading: String?
         let text: String?
         let images: [String]?
-    }
-    
-    var publishDate: Date {
-        guard let createdAt = createdAt else { return Date() }
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return formatter.date(from: createdAt) ?? Date()
+        
+        enum CodingKeys: String, CodingKey {
+            case subheading
+            case text
+            case images
+        }
     }
     
     enum CodingKeys: String, CodingKey {
         case id
+        case createdAt = "created_at"
         case title
         case description
         case titleImage = "title_image"
-        case createdAt = "created_at"
         case sections
     }
 } 
