@@ -86,7 +86,7 @@ class NotificationService {
         default: "Winter"
         }
         
-        content.body = "The new Polo&Lifestyle Magazine \(season) issue is now available"
+        content.body = "The new POLO&Lifestyle Magazine \(season) issue is now available"
         content.sound = .default
         
         // Trigger after 5 seconds
@@ -99,7 +99,7 @@ class NotificationService {
     private func triggerTestWeeklyNotification() {
         let content = UNMutableNotificationContent()
         content.title = "Weekly Articles Reminder"
-        content.body = "Don't miss out on the latest Polo&Lifestyle articles"
+        content.body = "Don't miss out on the latest POLO&Lifestyle articles"
         content.sound = .default
         
         // Trigger after 10 seconds
