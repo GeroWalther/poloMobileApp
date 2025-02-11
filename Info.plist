@@ -20,5 +20,10 @@
         <string>UIInterfaceOrientationLandscapeLeft</string>
         <string>UIInterfaceOrientationLandscapeRight</string>
     </array>
+    
+    <key>NSUserNotificationAlertStyle</key>
+    <string>alert</string>
+    <key>NSUserNotificationUsageDescription</key>
+    <string>We'd like to send you notifications about new magazine issues and articles.</string>
 </dict>
 </plist> 
