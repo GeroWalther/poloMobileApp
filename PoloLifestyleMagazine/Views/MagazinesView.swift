@@ -73,7 +73,7 @@ struct MagazinesView: View {
                                 .padding()
                             }
                             .refreshable {
-                                await viewModel.fetchMagazines()
+                                await viewModel.fetchMagazines(forceRefresh: true)
                             }
                         }
                     }
@@ -96,12 +96,13 @@ struct MagazinesView: View {
 
 private struct MagazineRowView: View {
     let magazine: Magazine
-    
+    @StateObject private var viewModel = MagazineViewModel()
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Magazine Cover Preview
+            // Magazine Cover Preview //URL(string: )
             ZStack {
-                AsyncImage(url: URL(string: magazine.pdf)) { image in
+                AsyncImage(url: viewModel.fetchMagazineFromDocuments(fileName: magazine.pdf)) { image in
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fill)

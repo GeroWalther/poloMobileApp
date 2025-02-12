@@ -4,7 +4,7 @@ struct Magazine: Identifiable, Codable {
     let id: Int
     let title: String
     let description: String
-    let pdf: String
+    var pdf: String
     let createdAt: String
     
     // Computed property to convert createdAt string to Date

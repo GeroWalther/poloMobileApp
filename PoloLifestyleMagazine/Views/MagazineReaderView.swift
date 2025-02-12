@@ -11,7 +11,8 @@ struct MagazineReaderView: View {
     @State private var loadingError: Error?
     @State private var opacity = 1.0
     @State private var scale = 1.0
-    
+    @StateObject private var viewModel = MagazineViewModel()
+
     var body: some View {
         GeometryReader { geometry in
             let isLandscape = geometry.size.width > geometry.size.height
@@ -149,7 +150,7 @@ struct MagazineReaderView: View {
     }
     
     private func loadPDF() {
-        guard let url = URL(string: magazine.pdf) else {
+        guard let url = viewModel.fetchMagazineFromDocuments(fileName: magazine.pdf) else {
             loadingError = NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])
             isLoading = false
             return

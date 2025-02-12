@@ -5,10 +5,11 @@ struct MagazineCoverView: View {
     let magazine: Magazine
     @State private var isLoadingThumbnail = true
     @State private var loadError: Error?
-    
+    @StateObject private var viewModel = MagazineViewModel()
+
     var body: some View {
         VStack(alignment: .leading) {
-            if let url = URL(string: magazine.pdf) {
+            if let url = viewModel.fetchMagazineFromDocuments(fileName: magazine.pdf) {
                 ZStack {
                     PDFThumbnailView(url: url, isLoading: $isLoadingThumbnail, error: $loadError)
                         .frame(height: 400)
@@ -53,3 +54,4 @@ struct MagazineCoverView: View {
         }
     }
 } 
+

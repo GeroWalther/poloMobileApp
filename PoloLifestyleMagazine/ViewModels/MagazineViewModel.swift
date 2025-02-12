@@ -2,6 +2,7 @@ import Foundation
 import Combine
 import OSLog
 import CoreData
+import UIKit
 
 @MainActor
 class MagazineViewModel: ObservableObject {
@@ -9,34 +10,33 @@ class MagazineViewModel: ObservableObject {
     @Published private(set) var articles: [Article] = []
     @Published private(set) var isLoading = false
     @Published private(set) var error: Error?
-    
+
     private let supabase = SupabaseService.shared
     private let logger = Logger(subsystem: "com.gw.PoloLifestyle", category: "MagazineViewModel")
     private let context = PersistenceController.shared.container.viewContext
-    private let cacheValidityDuration: TimeInterval = 300 // 5 minutes
-    
+    var fetchTask: Task<Void, Never>?  // Store the ongoing fetch task
+
+    private let articleCacheDuration: TimeInterval = 7 * 24 * 60 * 60  // 1 week
+    private let magazineFetchDates: [Int] = [1, 4, 7, 10] // Quarterly fetch months (Jan, Apr, Jul, Oct)
+
     init() {
         loadCachedData()
     }
-    
+
     private func loadCachedData() {
         Task {
-            let magazinesFetch = NSFetchRequest<CDMagazine>(entityName: "CDMagazine")
-            magazinesFetch.predicate = NSPredicate(
-                format: "lastFetchedAt > %@",
-                Date().addingTimeInterval(-cacheValidityDuration) as NSDate
-            )
-            
-            let articlesFetch = NSFetchRequest<CDArticle>(entityName: "CDArticle")
-            articlesFetch.predicate = NSPredicate(
-                format: "lastFetchedAt > %@",
-                Date().addingTimeInterval(-cacheValidityDuration) as NSDate
-            )
-            
+            let currentDate = Date()
+
+            let magazineFetch = NSFetchRequest<CDMagazine>(entityName: "CDMagazine")
+            magazineFetch.predicate = NSPredicate(format: "lastFetchedAt > %@", getLastQuarterDate() as NSDate)
+
+            let articleFetch = NSFetchRequest<CDArticle>(entityName: "CDArticle")
+            articleFetch.predicate = NSPredicate(format: "lastFetchedAt > %@", currentDate.addingTimeInterval(-articleCacheDuration) as NSDate)
+
             do {
-                let cdMagazines = try context.fetch(magazinesFetch)
-                let cdArticles = try context.fetch(articlesFetch)
-                
+                let cdMagazines = try context.fetch(magazineFetch)
+                let cdArticles = try context.fetch(articleFetch)
+
                 await MainActor.run {
                     self.magazines = cdMagazines.map { $0.toMagazine() }
                     self.articles = cdArticles.map { $0.toArticle() }
@@ -46,7 +46,7 @@ class MagazineViewModel: ObservableObject {
             }
         }
     }
-    
+
     private func saveContext() {
         if context.hasChanges {
             do {
@@ -58,132 +58,263 @@ class MagazineViewModel: ObservableObject {
     }
     
     func fetchMagazines(forceRefresh: Bool = false) async {
-        if !forceRefresh {
-            // Check cache first
-            let fetchRequest = NSFetchRequest<CDMagazine>(entityName: "CDMagazine")
-            fetchRequest.predicate = NSPredicate(
-                format: "lastFetchedAt > %@",
-                Date().addingTimeInterval(-cacheValidityDuration) as NSDate
-            )
+        let currentDate = Date()
+
+        // Check cached magazines
+        let fetchRequest = NSFetchRequest<CDMagazine>(entityName: "CDMagazine")
+        do {
+            let storedMagazines = try context.fetch(fetchRequest)
             
-            do {
-                let storedMagazines = try context.fetch(fetchRequest)
-                if !storedMagazines.isEmpty {
+            if !storedMagazines.isEmpty, !forceRefresh {
+                //let lastFetchedAt = storedMagazines.first?.lastFetchedAt ?? Date.distantPast
+                let lastQuarterlySync = storedMagazines.first?.lastQuarterlySync ?? Date.distantPast
+                let isQuarterlyFetchRequired = shouldFetchQuarterly(lastFetchedAt: lastQuarterlySync)
+                
+                // ✅ If no refresh is needed and no quarterly fetch is due, use cache
+                if !forceRefresh && !isQuarterlyFetchRequired {
                     logger.debug("Using cached magazines")
-                    self.magazines = storedMagazines.map { $0.toMagazine() }
+                    DispatchQueue.main.async {
+                        self.magazines = storedMagazines.map { $0.toMagazine() }
+                    }
                     return
                 }
-            } catch {
-                logger.error("CoreData fetch failed: \(error)")
             }
+        } catch {
+            logger.error("CoreData fetch failed: \(error)")
+        }
+
+        
+        // ✅ Check internet connection before making request
+        if !isInternetAvailable() {
+            return
         }
         
         if isLoading { return }
-        
+
         isLoading = true
         error = nil
-        
-        // Fetch from network
-        do {
-            let response = try await supabase.client
-                .database
-                .from("magazines")
-                .select()
-                .order("created_at", ascending: false)
-                .execute()
-            
-            let decoder = JSONDecoder()
-            let newMagazines = try decoder.decode([Magazine].self, from: response.data)
-            
-            // Save to Core Data
-            let batch = NSBatchDeleteRequest(fetchRequest: NSFetchRequest<NSFetchRequestResult>(entityName: "CDMagazine"))
-            _ = try? context.execute(batch)
-            
-            newMagazines.forEach { magazine in
-                _ = magazine.toCoreData(context: context)
-            }
-            saveContext()
-            
-            self.magazines = newMagazines
-            self.error = nil
-            self.isLoading = false
-            
-            logger.info("Successfully fetched \(newMagazines.count) magazines")
-            
-        } catch {
-            self.error = error
-            self.isLoading = false
-            logger.error("Failed to fetch magazines: \(error)")
-        }
-    }
-    
-    func fetchArticles(forceRefresh: Bool = false) async {
-        if !forceRefresh {
-            let fetchRequest = NSFetchRequest<CDArticle>(entityName: "CDArticle")
-            fetchRequest.predicate = NSPredicate(
-                format: "lastFetchedAt > %@",
-                Date().addingTimeInterval(-cacheValidityDuration) as NSDate
-            )
-            
+
+        fetchTask = Task {
             do {
-                let storedArticles = try context.fetch(fetchRequest)
-                if !storedArticles.isEmpty {
-                    logger.debug("Using cached articles")
-                    self.articles = storedArticles.map { $0.toArticle() }
-                        .sorted { $0.publishDate > $1.publishDate }
-                    return
+                let response = try await supabase.client
+                    .database
+                    .from("magazines")
+                    .select()
+                    .order("created_at", ascending: false)
+                    .execute()
+                
+                let decoder = JSONDecoder()
+                let newMagazines = try decoder.decode([Magazine].self, from: response.data)
+                
+                // ✅ Immediately update UI with new magazines (without PDFs yet)
+                DispatchQueue.main.async {
+                    self.magazines = newMagazines
+                }
+                
+                // ✅ Delete old magazines
+                let deleteRequest = NSBatchDeleteRequest(fetchRequest: NSFetchRequest<NSFetchRequestResult>(entityName: "CDMagazine"))
+                _ = try? context.execute(deleteRequest)
+                
+                // ✅ Save new magazines
+                for magazine in newMagazines {
+                    let cdMagazine = magazine.toCoreData(context: context)
+                    await savePDF(magazine: magazine, cdMagazine: cdMagazine)
+                }
+                
+                saveContext()
+                
+                DispatchQueue.main.async {
+                     self.error = nil
+                    self.isLoading = false
+                    self.logger.info("Successfully fetched \(newMagazines.count) magazines")
                 }
             } catch {
-                logger.error("CoreData fetch failed: \(error)")
+                if (error as NSError).code == -999 { return }  // Ignore cancellation errors
+                DispatchQueue.main.async {
+                     self.error = error
+                    self.isLoading = false
+                }
+                logger.error("Failed to fetch magazines: \(error)")
             }
         }
+    }
+
+
+    func fetchArticles(forceRefresh: Bool = false) async {
+        let currentDate = Date()
+        let oneWeekAgo = currentDate.addingTimeInterval(-7 * 24 * 60 * 60) // 1 week ago
+        //let oneWeekAgo = currentDate.addingTimeInterval(-60) // ⏳ 1 minute ago
+
+
+        let fetchRequest = NSFetchRequest<CDArticle>(entityName: "CDArticle")
+
+        do {
+            let storedArticles = try context.fetch(fetchRequest)
+            
+            if !storedArticles.isEmpty {
+                let lastFetchedAt = storedArticles.first?.lastFetchedAt ?? .distantPast
+                
+                if !forceRefresh, lastFetchedAt > oneWeekAgo {
+                    // ✅ Use cached articles if within a week
+                    logger.debug("Using cached articles")
+                    DispatchQueue.main.async {
+                        self.articles = storedArticles.map { $0.toArticle() }.sorted { $0.publishDate > $1.publishDate }
+                    }
+                    return
+                }
+            }
+        } catch {
+            logger.error("CoreData fetch failed: \(error)")
+        }
         
+        // ✅ Check internet connection before making request
+        if !isInternetAvailable() {
+            return
+        }
+
         if isLoading { return }
-        
+
         isLoading = true
         error = nil
         
-        do {
-            logger.debug("Starting articles fetch...")
-            
-            let response = try await supabase.client
-                .database
-                .from("articles")
-                .select()
-                .order("created_at", ascending: false)
-                .execute()
-            
-            let decoder = JSONDecoder()
-            let newArticles = try decoder.decode([Article].self, from: response.data)
-            
-            // Save to Core Data
-            let batch = NSBatchDeleteRequest(fetchRequest: NSFetchRequest<NSFetchRequestResult>(entityName: "CDArticle"))
-            _ = try? context.execute(batch)
-            
-            newArticles.forEach { article in
-                _ = article.toCoreData(context: context)
-                logger.debug("Article: \(article.title), Date: \(article.publishDate)")
+        fetchTask = Task {
+            let currentDate = Date()
+
+            do {
+                let response = try await supabase.client
+                    .database
+                    .from("articles")
+                    .select()
+                    .order("created_at", ascending: false)
+                    .execute()
+
+                let decoder = JSONDecoder()
+                let newArticles = try decoder.decode([Article].self, from: response.data)
+
+                // ✅ Delete old articles before saving new ones
+                let deleteRequest = NSBatchDeleteRequest(fetchRequest: NSFetchRequest<NSFetchRequestResult>(entityName: "CDArticle"))
+                _ = try? context.execute(deleteRequest)
+
+                for (index, article) in newArticles.enumerated() {
+                    let cdArticle = article.toCoreData(context: context)
+                    cdArticle.lastFetchedAt = currentDate  // ✅ Update last fetched timestamp
+
+                    if let imageUrl = URL(string: article.titleImage) {
+                        await downloadAndSaveImage(from: imageUrl, for: cdArticle, atIndex: index)
+                    }
+                }
+
+                saveContext()
+
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    self.logger.info("Successfully fetched \(newArticles.count) articles")
+                }
+            } catch {
+                if (error as NSError).code == -999 { return }  // Ignore cancellation errors
+                
+                DispatchQueue.main.async {
+                    self.error = error
+                    self.isLoading = false
+                }
+                logger.error("Failed to fetch articles: \(error)")
             }
-            saveContext()
-            
-            self.articles = newArticles.sorted { $0.publishDate > $1.publishDate }
-            self.error = nil
-            self.isLoading = false
-            
-            logger.info("Successfully fetched \(newArticles.count) articles")
-            
+        }
+    }
+
+    
+    func downloadAndSaveImage(from url: URL, for cdArticle: CDArticle, atIndex index: Int) async {
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+
+            if let filename = saveImageToDocumentsDirectory(data: data, imageName: "\(cdArticle.id ?? UUID().uuidString).jpg") {
+                DispatchQueue.main.async {
+                    cdArticle.titleImage = filename
+                    self.saveContext()
+
+                    // ✅ Instead of modifying the struct directly, we replace it in the array
+                    if index < self.articles.count {
+                        var updatedArticle = self.articles[index]
+                        updatedArticle.titleImage = filename
+                        self.articles[index] = updatedArticle
+                    }
+                }
+            }
         } catch {
-            self.error = error
-            self.isLoading = false
-            logger.error("Failed to fetch articles: \(error)")
+            print("Failed to download image: \(error)")
+        }
+    }
+
+    func saveImageToDocumentsDirectory(data: Data, imageName: String) -> String? {
+        let fileManager = FileManager.default
+        guard let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            return nil
+        }
+
+        let fileURL = documentsDirectory.appendingPathComponent(imageName)
+
+        do {
+            try data.write(to: fileURL)
+            return imageName  // Return only the filename
+        } catch {
+            print("Failed to save image: \(error)")
+            return nil
         }
     }
     
-    // Function to force refresh all data
+    private func savePDF(magazine: Magazine, cdMagazine: CDMagazine) async {
+        guard let url = URL(string: magazine.pdf) else { return }
+
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            let fileName = "magazine_\(magazine.id).pdf"
+            let fileURL = getDocumentsDirectory().appendingPathComponent(fileName)
+
+            try data.write(to: fileURL)
+
+            DispatchQueue.main.async {
+                // ✅ Update Core Data
+                cdMagazine.pdf = fileName
+                self.saveContext()
+
+                // ✅ Find the magazine in the list and update it
+                if let index = self.magazines.firstIndex(where: { $0.id == magazine.id }) {
+                    var updatedMagazine = self.magazines[index]
+                    updatedMagazine.pdf = fileName
+                    self.magazines[index] = updatedMagazine  // ✅ Triggers SwiftUI refresh
+                }
+            }
+        } catch {
+            logger.error("Failed to download PDF for magazine \(magazine.id): \(error)")
+        }
+    }
+
+
+
+    /// Get the document directory path
+    private func getDocumentsDirectory() -> URL {
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+    }
+
+    /// Returns the last quarterly fetch date
+    private func getLastQuarterDate() -> Date {
+        let currentMonth = Calendar.current.component(.month, from: Date())
+        let year = Calendar.current.component(.year, from: Date())
+        let lastFetchMonth = magazineFetchDates.last(where: { $0 <= currentMonth }) ?? 1
+        let components = DateComponents(year: year, month: lastFetchMonth, day: 2)
+        return Calendar.current.date(from: components) ?? Date()
+    }
+
     func refreshAll() async {
         await fetchMagazines(forceRefresh: true)
         await fetchArticles(forceRefresh: true)
     }
+    
+    func fetchMagazineFromDocuments(fileName: String) -> URL? {
+        let fileURL = getDocumentsDirectory().appendingPathComponent(fileName)
+        return FileManager.default.fileExists(atPath: fileURL.path) ? fileURL : nil
+    }
+
     
     func fetchArticlesDirectly() async {
         do {
@@ -234,4 +365,14 @@ class MagazineViewModel: ObservableObject {
             }
         }
     }
-} 
+    
+    func fetchImageFromDocumentsDirectory(imageName: String) -> URL? {
+        let fileManager = FileManager.default
+        guard let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            return nil
+        }
+
+        let fileURL = documentsDirectory.appendingPathComponent(imageName)
+        return fileURL
+    }
+}

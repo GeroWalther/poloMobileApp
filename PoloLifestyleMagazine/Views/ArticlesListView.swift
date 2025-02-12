@@ -86,18 +86,19 @@ struct ArticlesListView: View {
         .toolbarBackground(.visible, for: .navigationBar)
         .task {
             await viewModel.fetchArticles()
-            await viewModel.fetchArticlesDirectly()
+            //await viewModel.fetchArticlesDirectly()
         }
     }
 }
 
 struct ArticleRowView: View {
     let article: Article
-    
+    @EnvironmentObject private var viewModel: MagazineViewModel
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // Image
-            AsyncImage(url: URL(string: article.titleImage)) { image in
+            AsyncImage(url: viewModel.fetchImageFromDocumentsDirectory(imageName: article.titleImage)) { image in
                 image
                     .resizable()
                     .aspectRatio(contentMode: .fill)

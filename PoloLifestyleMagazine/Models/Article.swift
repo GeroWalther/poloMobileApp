@@ -4,7 +4,7 @@ struct Article: Identifiable, Codable {
     let id: String
     let title: String
     let description: String
-    let titleImage: String
+    var titleImage: String
     let createdAt: String?
     let sections: [Section]?
     

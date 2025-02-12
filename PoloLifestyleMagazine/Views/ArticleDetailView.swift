@@ -18,8 +18,8 @@ struct ArticleDetailView: View {
         GeometryReader { geometry in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    // Hero Image
-                    AsyncImage(url: URL(string: article.titleImage)) { image in
+                    // Hero Image // viewModel.fetchImageFromDocumentsDirectory(imageName: article.titleImage)
+                    AsyncImage(url: viewModel.fetchImageFromDocumentsDirectory(imageName: article.titleImage)) { image in
                         image
                             .resizable()
                             .aspectRatio(contentMode: .fill)
@@ -58,6 +58,10 @@ struct ArticleDetailView: View {
                                     .padding(.top, 8)
                             }
                         }
+                    }
+                    .onAppear() {
+                        print("article.title: \(article.title)")
+                        print("article.description: \(article.description)")
                     }
                     .padding(.horizontal, 24)
                     .padding(.bottom, 32)
@@ -205,11 +209,12 @@ extension URL: Identifiable {
 /// A view that displays a card for a related article in the "You May Also Like" section
 struct RelatedArticleCard: View {
     let article: Article
-    
+    @EnvironmentObject private var viewModel: MagazineViewModel
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             // Image
-            AsyncImage(url: URL(string: article.titleImage)) { image in
+            AsyncImage(url: viewModel.fetchImageFromDocumentsDirectory(imageName: article.titleImage)) { image in
                 image
                     .resizable()
                     .aspectRatio(contentMode: .fill)
