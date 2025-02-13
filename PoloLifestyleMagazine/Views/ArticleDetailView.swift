@@ -7,7 +7,6 @@ struct ArticleDetailView: View {
     @EnvironmentObject private var viewModel: MagazineViewModel
     
     var relatedArticles: [Article] {
-        // Get the 3 most recent articles excluding the current one
         viewModel.articles
             .filter { $0.id != article.id }
             .prefix(3)
@@ -18,7 +17,7 @@ struct ArticleDetailView: View {
         GeometryReader { geometry in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    // Hero Image // viewModel.fetchImageFromDocumentsDirectory(imageName: article.titleImage)
+                    // Hero Image
                     AsyncImage(url: viewModel.fetchImageFromDocumentsDirectory(imageName: article.titleImage)) { image in
                         image
                             .resizable()
@@ -36,32 +35,16 @@ struct ArticleDetailView: View {
                     
                     // Content Container
                     VStack(alignment: .leading, spacing: 24) {
-                        // Title
-                        Text(article.title)
-                            .font(.custom("Times New Roman", size: 32))
-                            .fontWeight(.bold)
-                            .foregroundColor(.init(white: 0.2))
-                            .padding(.top, 24)
-                            .frame(maxWidth: geometry.size.width - 48, alignment: .leading)
-                        
-                        // Description
-                        Text(article.description)
-                            .font(.custom("Times New Roman", size: 20))
-                            .foregroundColor(.init(white: 0.3))
-                            .lineSpacing(8)
-                            .frame(maxWidth: geometry.size.width - 48, alignment: .leading)
+                        // Title and Description
+                        articleHeader(width: geometry.size.width)
                         
                         // Sections
                         if let sections = article.sections {
-                            ForEach(sections, id: \.subheading) { section in
+                            ForEach(Array(sections.enumerated()), id: \.offset) { index, section in
                                 SectionContentView(section: section, screenWidth: geometry.size.width)
                                     .padding(.top, 8)
                             }
                         }
-                    }
-                    .onAppear() {
-                        print("article.title: \(article.title)")
-                        print("article.description: \(article.description)")
                     }
                     .padding(.horizontal, 24)
                     .padding(.bottom, 32)
@@ -95,6 +78,9 @@ struct ArticleDetailView: View {
                 }
             }
             .background(Color.white)
+            .onAppear {
+                debugPrintArticleContent()
+            }
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -103,11 +89,35 @@ struct ArticleDetailView: View {
             }
         }
         .ignoresSafeArea(.container, edges: .top)
-        .onAppear {
-            #if DEBUG
-            print("Article Detail View appeared for article: \(article.title)")
-            print("Title Image URL: \(article.titleImage)")
-            #endif
+    }
+    
+    private func articleHeader(width: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(article.title)
+                .font(.custom("Times New Roman", size: 32))
+                .fontWeight(.bold)
+                .foregroundColor(.init(white: 0.2))
+                .padding(.top, 24)
+                .frame(maxWidth: width - 48, alignment: .leading)
+            
+            Text(article.description)
+                .font(.custom("Times New Roman", size: 20))
+                .foregroundColor(.init(white: 0.3))
+                .lineSpacing(8)
+                .frame(maxWidth: width - 48, alignment: .leading)
+        }
+    }
+    
+    private func debugPrintArticleContent() {
+        print("Article sections count: \(article.sections?.count ?? 0)")
+        if let sections = article.sections {
+            for section in sections {
+                print("Section: \(section.subheading ?? "no subheading")")
+                print("Has text: \(section.text != nil)")
+                if let text = section.text {
+                    print("Text content: \(text)")
+                }
+            }
         }
     }
 }
@@ -136,7 +146,6 @@ struct SectionContentView: View {
                     presentedURL = url
                 }
                 .frame(maxWidth: screenWidth - 48, alignment: .leading)
-                .frame(minHeight: 30) // Minimum height to prevent layout issues
             }
             
             if let images = section.images, !images.isEmpty {
