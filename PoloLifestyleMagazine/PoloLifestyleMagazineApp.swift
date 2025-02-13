@@ -43,6 +43,19 @@ struct PoloLifestyleMagazineApp: App {
             .foregroundColor: UIColor(red: 0.2, green: 0.2, blue: 0.2, alpha: 1.0),
         ]
         
+        // Configure tab bar appearance
+        let tabBarAppearance = UITabBarAppearance()
+        tabBarAppearance.configureWithOpaqueBackground()
+        tabBarAppearance.backgroundColor = .white
+        
+        // Set both selected (tint) and unselected colors
+        UITabBar.appearance().tintColor = UIColor(red: 0.6, green: 0.4, blue: 0.0, alpha: 1.0) // #996600 for selected
+        UITabBar.appearance().unselectedItemTintColor = UIColor.gray // for unselected
+        UITabBar.appearance().standardAppearance = tabBarAppearance
+        if #available(iOS 15.0, *) {
+            UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
+        }
+        
         // Apply the appearance to all navigation bars
         UINavigationBar.appearance().standardAppearance = navBarAppearance
         UINavigationBar.appearance().compactAppearance = navBarAppearance
