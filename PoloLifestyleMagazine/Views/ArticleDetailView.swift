@@ -31,6 +31,7 @@ struct ArticleDetailView: View {
                             )
                     }
                     .frame(width: geometry.size.width, height: 300)
+                    .padding(.top, 95)
                     .clipped()
                     
                     // Content Container
