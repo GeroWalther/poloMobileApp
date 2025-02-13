@@ -78,9 +78,6 @@ struct ArticleDetailView: View {
                 }
             }
             .background(Color.white)
-            .onAppear {
-                debugPrintArticleContent()
-            }
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -107,19 +104,6 @@ struct ArticleDetailView: View {
                 .frame(maxWidth: width - 48, alignment: .leading)
         }
     }
-    
-    private func debugPrintArticleContent() {
-        print("Article sections count: \(article.sections?.count ?? 0)")
-        if let sections = article.sections {
-            for section in sections {
-                print("Section: \(section.subheading ?? "no subheading")")
-                print("Has text: \(section.text != nil)")
-                if let text = section.text {
-                    print("Text content: \(text)")
-                }
-            }
-        }
-    }
 }
 
 /// A view that displays the content of a single article with rich text formatting and clickable links
@@ -135,7 +119,7 @@ struct SectionContentView: View {
         VStack(alignment: .leading, spacing: 16) {
             if let subheading = section.subheading, !subheading.isEmpty {
                 Text(subheading)
-                    .font(.custom("Times New Roman", size: 26))
+                    .font(.custom("Times New Roman", size: 24))
                     .fontWeight(.semibold)
                     .foregroundColor(.init(white: 0.2))
                     .frame(maxWidth: screenWidth - 48, alignment: .leading)
