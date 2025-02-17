@@ -42,14 +42,18 @@ struct ArticleDetailView: View {
                             .fontWeight(.bold)
                             .foregroundColor(.init(white: 0.2))
                             .padding(.top, 24)
-                            .frame(maxWidth: geometry.size.width - 48, alignment: .leading)
+                            //.frame(maxWidth: geometry.size.width - 48, alignment: .leading)
+                            .frame(maxWidth: max(0, geometry.size.width - 48), alignment: .leading)
+
                         
                         // Description
                         Text(article.description)
                             .font(.custom("Times New Roman", size: 20))
                             .foregroundColor(.init(white: 0.3))
                             .lineSpacing(8)
-                            .frame(maxWidth: geometry.size.width - 48, alignment: .leading)
+                            //.frame(maxWidth: geometry.size.width - 48, alignment: .leading)
+                            .frame(maxWidth: max(0, geometry.size.width - 48), alignment: .leading)
+
                         
                         // Sections
                         if let sections = article.sections {
@@ -120,7 +124,8 @@ struct SectionContentView: View {
     @State private var selectedImage: String?
     /// Tracks the URL that should be displayed in the Safari view
     @State private var presentedURL: URL?
-    
+    @EnvironmentObject private var viewModel: MagazineViewModel
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             if let subheading = section.subheading, !subheading.isEmpty {
@@ -128,14 +133,18 @@ struct SectionContentView: View {
                     .font(.custom("Times New Roman", size: 26))
                     .fontWeight(.semibold)
                     .foregroundColor(.init(white: 0.2))
-                    .frame(maxWidth: screenWidth - 48, alignment: .leading)
+                    //.frame(maxWidth: screenWidth - 48, alignment: .leading)
+                    .frame(maxWidth: max(0, screenWidth - 48), alignment: .leading)
+                
+                
             }
             
             if let text = section.text, !text.isEmpty {
                 HTMLText(html: text) { url in
                     presentedURL = url
                 }
-                .frame(maxWidth: screenWidth - 48, alignment: .leading)
+                //.frame(maxWidth: screenWidth - 48, alignment: .leading)
+                .frame(maxWidth: max(0, screenWidth - 48), alignment: .leading)
                 .frame(minHeight: 30) // Minimum height to prevent layout issues
             }
             
@@ -143,7 +152,7 @@ struct SectionContentView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 16) {
                         ForEach(images, id: \.self) { imageUrl in
-                            AsyncImage(url: URL(string: imageUrl)) { image in
+                            AsyncImage(url: viewModel.fetchImageFromDocumentsDirectory(imageName: imageUrl)) { image in
                                 image
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)

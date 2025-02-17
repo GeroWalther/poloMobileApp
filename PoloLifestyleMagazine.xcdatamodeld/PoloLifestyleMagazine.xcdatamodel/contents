@@ -3,6 +3,7 @@
     <entity name="CDArticle" representedClassName="CDArticle" syncable="YES" codeGenerationType="class">
         <attribute name="createdAt" optional="YES" attributeType="String"/>
         <attribute name="desc" optional="YES" attributeType="String"/>
+        <attribute name="downloadedImages" optional="YES" attributeType="Binary"/>
         <attribute name="id" optional="YES" attributeType="String"/>
         <attribute name="lastFetchedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="sectionsData" optional="YES" attributeType="Binary"/>

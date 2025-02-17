@@ -138,48 +138,16 @@ class MagazineViewModel: ObservableObject {
             }
         }
     }
-
-
+    
     func fetchArticles(forceRefresh: Bool = false) async {
-        let currentDate = Date()
-        let oneWeekAgo = currentDate.addingTimeInterval(-7 * 24 * 60 * 60) // 1 week ago
-        //let oneWeekAgo = currentDate.addingTimeInterval(-60) // ⏳ 1 minute ago
-
-
-        let fetchRequest = NSFetchRequest<CDArticle>(entityName: "CDArticle")
-
-        do {
-            let storedArticles = try context.fetch(fetchRequest)
-            
-            if !storedArticles.isEmpty {
-                let lastFetchedAt = storedArticles.first?.lastFetchedAt ?? .distantPast
-                
-                if !forceRefresh, lastFetchedAt > oneWeekAgo {
-                    // ✅ Use cached articles if within a week
-                    logger.debug("Using cached articles")
-                    DispatchQueue.main.async {
-                        self.articles = storedArticles.map { $0.toArticle() }.sorted { $0.publishDate > $1.publishDate }
-                    }
-                    return
-                }
-            }
-        } catch {
-            logger.error("CoreData fetch failed: \(error)")
-        }
         
-        // ✅ Check internet connection before making request
-        if !isInternetAvailable() {
-            return
-        }
-
-        if isLoading { return }
+        self.fetchArticlesFromCoreData()
+        if !isInternetAvailable() || isLoading || self.articles.count > 0 { return }
 
         isLoading = true
         error = nil
-        
-        fetchTask = Task {
-            let currentDate = Date()
 
+        fetchTask = Task {
             do {
                 let response = try await supabase.client
                     .database
@@ -191,34 +159,64 @@ class MagazineViewModel: ObservableObject {
                 let decoder = JSONDecoder()
                 let newArticles = try decoder.decode([Article].self, from: response.data)
 
-                // ✅ Delete old articles before saving new ones
                 let deleteRequest = NSBatchDeleteRequest(fetchRequest: NSFetchRequest<NSFetchRequestResult>(entityName: "CDArticle"))
                 _ = try? context.execute(deleteRequest)
 
                 for (index, article) in newArticles.enumerated() {
-                    let cdArticle = article.toCoreData(context: context)
-                    cdArticle.lastFetchedAt = currentDate  // ✅ Update last fetched timestamp
+                    var updatedSections: [Article.Section] = []
 
+                    for section in article.sections ?? [] {
+                        var localImagePaths: [String] = []
+                        for imageUrlString in section.images ?? [] {
+                            if let imageUrl = URL(string: imageUrlString) {
+                                let imageName = UUID().uuidString + ".jpg"
+                                if let localPath = await saveImageLocally(from: imageUrl, withName: imageName) {
+                                    localImagePaths.append(localPath)
+                                }
+                            }
+                        }
+                        updatedSections.append(Article.Section(subheading: section.subheading, text: section.text, images: localImagePaths))
+                    }
+
+                    let cdArticle = article.toCoreData(context: context, updatedSections: updatedSections)
+                    cdArticle.lastFetchedAt = Date()
+                    
                     if let imageUrl = URL(string: article.titleImage) {
                         await downloadAndSaveImage(from: imageUrl, for: cdArticle, atIndex: index)
                     }
                 }
-
                 saveContext()
 
-                DispatchQueue.main.async {
+                DispatchQueue.main.asyncAfter(deadline: .now()) {
                     self.isLoading = false
-                    self.logger.info("Successfully fetched \(newArticles.count) articles")
+                    self.fetchArticlesFromCoreData()
                 }
             } catch {
-                if (error as NSError).code == -999 { return }  // Ignore cancellation errors
-                
                 DispatchQueue.main.async {
                     self.error = error
                     self.isLoading = false
                 }
-                logger.error("Failed to fetch articles: \(error)")
+                print("Failed to fetch articles: \(error)")
             }
+        }
+    }
+
+    func fetchArticlesFromCoreData(forceRefresh: Bool = false){
+        let fetchRequest = NSFetchRequest<CDArticle>(entityName: "CDArticle")
+        do {
+            let storedArticles = try context.fetch(fetchRequest)
+            if !storedArticles.isEmpty {
+                let lastFetchedAt = storedArticles.first?.lastFetchedAt ?? .distantPast
+                if !forceRefresh, lastFetchedAt > Date().addingTimeInterval(-7 * 24 * 60 * 60) {
+                    DispatchQueue.main.async {
+                        self.logger.debug("Using cached articles")
+                        self.articles = storedArticles.map { $0.toArticle() }.sorted { $0.publishDate > $1.publishDate }
+                    }
+                    return
+                }
+            }
+        } catch {
+            print("CoreData fetch failed: \(error)")
         }
     }
 
@@ -244,6 +242,7 @@ class MagazineViewModel: ObservableObject {
             print("Failed to download image: \(error)")
         }
     }
+
 
     func saveImageToDocumentsDirectory(data: Data, imageName: String) -> String? {
         let fileManager = FileManager.default
@@ -288,8 +287,19 @@ class MagazineViewModel: ObservableObject {
             logger.error("Failed to download PDF for magazine \(magazine.id): \(error)")
         }
     }
+    
+    func saveImageLocally(from url: URL, withName name: String) async -> String? {
+        let fileURL = getDocumentsDirectory().appendingPathComponent(name)
 
-
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url) // ✅ Asynchronous download
+            try data.write(to: fileURL)
+            return fileURL.lastPathComponent // Store only the filename
+        } catch {
+            print("Error saving image: \(error)")
+            return nil
+        }
+    }
 
     /// Get the document directory path
     private func getDocumentsDirectory() -> URL {

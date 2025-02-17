@@ -72,6 +72,11 @@ struct ArticlesListView: View {
                 }
             }
         }
+        .onAppear() {
+            Task {
+                await viewModel.fetchArticles()
+            }
+        }
         .navigationTitle("Articles")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -84,10 +89,10 @@ struct ArticlesListView: View {
             for: .navigationBar
         )
         .toolbarBackground(.visible, for: .navigationBar)
-        .task {
-            await viewModel.fetchArticles()
-            //await viewModel.fetchArticlesDirectly()
-        }
+//        .task {
+//            await viewModel.fetchArticles()
+//            //await viewModel.fetchArticlesDirectly()
+//        }
     }
 }
 

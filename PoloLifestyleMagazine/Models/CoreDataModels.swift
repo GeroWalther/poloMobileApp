@@ -100,25 +100,43 @@ extension Magazine {
     }
 }
 
+//extension Article {
+//    func toCoreData(context: NSManagedObjectContext) -> CDArticle {
+//        let cdArticle = CDArticle(context: context)
+//        cdArticle.id = id
+//        cdArticle.title = title
+//        cdArticle.desc = description
+//        cdArticle.createdAt = createdAt
+//        cdArticle.lastFetchedAt = Date()
+//        
+//        // Convert sections to JSON data for storage
+//        if let sections = sections {
+//            let encoder = JSONEncoder()
+//            if let sectionsData = try? encoder.encode(sections) {
+//                cdArticle.sectionsData = sectionsData
+//            }
+//        }
+//        
+//        return cdArticle
+//    }
+//}
+
+
 extension Article {
-    func toCoreData(context: NSManagedObjectContext) -> CDArticle {
+    func toCoreData(context: NSManagedObjectContext, updatedSections: [Section]) -> CDArticle {
         let cdArticle = CDArticle(context: context)
         cdArticle.id = id
         cdArticle.title = title
         cdArticle.desc = description
         cdArticle.createdAt = createdAt
         cdArticle.lastFetchedAt = Date()
-        
-        // Convert sections to JSON data for storage
-        if let sections = sections {
-            let encoder = JSONEncoder()
-            if let sectionsData = try? encoder.encode(sections) {
-                cdArticle.sectionsData = sectionsData
-            }
+
+        let encoder = JSONEncoder()
+        if let sectionsData = try? encoder.encode(updatedSections) {
+            cdArticle.sectionsData = sectionsData
         }
-        
+
         return cdArticle
     }
-
 }
 

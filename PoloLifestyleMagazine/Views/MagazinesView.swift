@@ -82,8 +82,10 @@ struct MagazinesView: View {
                     ToolbarItem(placement: .principal) {
                         PoloLifestyleHeader()
                     }
-                }
-                .task {
+                }                
+            }
+            .onAppear() {
+                Task {
                     await viewModel.fetchMagazines()
                 }
             }
