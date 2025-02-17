@@ -18,8 +18,10 @@ struct PDFThumbnailView: UIViewRepresentable {
     func updateUIView(_ uiView: PDFView, context: Context) {}
     
     private func loadPDF(in pdfView: PDFView) {
-        isLoading = true
-        error = nil
+        DispatchQueue.main.async {
+            isLoading = true
+            error = nil
+        }
         
         let request = URLRequest(url: url, cachePolicy: .returnCacheDataElseLoad)
         

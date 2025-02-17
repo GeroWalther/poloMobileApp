@@ -115,7 +115,7 @@ struct SectionContentView: View {
     @State private var selectedImage: String?
     /// Tracks the URL that should be displayed in the Safari view
     @State private var presentedURL: URL?
-    
+    @EnvironmentObject private var viewModel: MagazineViewModel
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             if let subheading = section.subheading, !subheading.isEmpty {
@@ -137,7 +137,7 @@ struct SectionContentView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 16) {
                         ForEach(images, id: \.self) { imageUrl in
-                            AsyncImage(url: URL(string: imageUrl)) { image in
+                            AsyncImage(url: viewModel.fetchImageFromDocumentsDirectory(imageName: imageUrl)) { image in
                                 image
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)

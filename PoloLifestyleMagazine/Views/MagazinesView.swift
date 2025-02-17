@@ -83,7 +83,12 @@ struct MagazinesView: View {
                         PoloLifestyleHeader()
                     }
                 }
-                .task {
+//                .task {
+//                    await viewModel.fetchMagazines()
+//                }
+            }
+            .onAppear() {
+                Task {
                     await viewModel.fetchMagazines()
                 }
             }
