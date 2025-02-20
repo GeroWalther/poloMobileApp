@@ -139,93 +139,10 @@ class MagazineViewModel: ObservableObject {
         }
     }
 
-
-//    func fetchArticles(forceRefresh: Bool = false) async {
-//        let currentDate = Date()
-//        let oneWeekAgo = currentDate.addingTimeInterval(-7 * 24 * 60 * 60) // 1 week ago
-//        //let oneWeekAgo = currentDate.addingTimeInterval(-60) // ⏳ 1 minute ago
-//
-//
-//        let fetchRequest = NSFetchRequest<CDArticle>(entityName: "CDArticle")
-//
-//        do {
-//            let storedArticles = try context.fetch(fetchRequest)
-//            
-//            if !storedArticles.isEmpty {
-//                let lastFetchedAt = storedArticles.first?.lastFetchedAt ?? .distantPast
-//                
-//                if !forceRefresh, lastFetchedAt > oneWeekAgo {
-//                    // ✅ Use cached articles if within a week
-//                    logger.debug("Using cached articles")
-//                    DispatchQueue.main.async {
-//                        self.articles = storedArticles.map { $0.toArticle() }.sorted { $0.publishDate > $1.publishDate }
-//                    }
-//                    return
-//                }
-//            }
-//        } catch {
-//            logger.error("CoreData fetch failed: \(error)")
-//        }
-//        
-//        // ✅ Check internet connection before making request
-//        if !isInternetAvailable() {
-//            return
-//        }
-//
-//        if isLoading { return }
-//
-//        isLoading = true
-//        error = nil
-//        
-//        fetchTask = Task {
-//            let currentDate = Date()
-//
-//            do {
-//                let response = try await supabase.client
-//                    .database
-//                    .from("articles")
-//                    .select()
-//                    .order("created_at", ascending: false)
-//                    .execute()
-//
-//                let decoder = JSONDecoder()
-//                let newArticles = try decoder.decode([Article].self, from: response.data)
-//
-//                // ✅ Delete old articles before saving new ones
-//                let deleteRequest = NSBatchDeleteRequest(fetchRequest: NSFetchRequest<NSFetchRequestResult>(entityName: "CDArticle"))
-//                _ = try? context.execute(deleteRequest)
-//
-//                for (index, article) in newArticles.enumerated() {
-//                    let cdArticle = article.toCoreData(context: context)
-//                    cdArticle.lastFetchedAt = currentDate  // ✅ Update last fetched timestamp
-//
-//                    if let imageUrl = URL(string: article.titleImage) {
-//                        await downloadAndSaveImage(from: imageUrl, for: cdArticle, atIndex: index)
-//                    }
-//                }
-//
-//                saveContext()
-//
-//                DispatchQueue.main.async {
-//                    self.isLoading = false
-//                    self.logger.info("Successfully fetched \(newArticles.count) articles")
-//                }
-//            } catch {
-//                if (error as NSError).code == -999 { return }  // Ignore cancellation errors
-//                
-//                DispatchQueue.main.async {
-//                    self.error = error
-//                    self.isLoading = false
-//                }
-//                logger.error("Failed to fetch articles: \(error)")
-//            }
-//        }
-//    }
-
     func fetchArticles(forceRefresh: Bool = false) async {
         
-        self.fetchArticlesFromCoreData()
-        if !isInternetAvailable() || isLoading || self.articles.count > 0 { return }
+        let isValid = self.fetchArticlesFromCoreData(forceRefresh: forceRefresh)
+        if !isInternetAvailable() || isLoading || (isValid == true && forceRefresh == false){ return }
 
         isLoading = true
         error = nil
@@ -272,7 +189,7 @@ class MagazineViewModel: ObservableObject {
 
                 DispatchQueue.main.asyncAfter(deadline: .now()) {
                     self.isLoading = false
-                    self.fetchArticlesFromCoreData()
+                    let _ = self.fetchArticlesFromCoreData()
                 }
             } catch {
                 DispatchQueue.main.async {
@@ -284,23 +201,31 @@ class MagazineViewModel: ObservableObject {
         }
     }
     
-    func fetchArticlesFromCoreData(forceRefresh: Bool = false){
+    func fetchArticlesFromCoreData(forceRefresh: Bool = false) -> Bool{
+        let currentDate = Date()
+        let oneWeekAgo = currentDate.addingTimeInterval(-7 * 24 * 60 * 60) // 1 week ago
+        let oneMinAgo = currentDate.addingTimeInterval(-60) // ⏳ 1 minute ago // for testing purpose
+        print("One week ago date", oneWeekAgo)
+
         let fetchRequest = NSFetchRequest<CDArticle>(entityName: "CDArticle")
         do {
             let storedArticles = try context.fetch(fetchRequest)
             if !storedArticles.isEmpty {
                 let lastFetchedAt = storedArticles.first?.lastFetchedAt ?? .distantPast
-                if !forceRefresh, lastFetchedAt > Date().addingTimeInterval(-7 * 24 * 60 * 60) {
+                print("last fetch date", lastFetchedAt)
+                if !forceRefresh, lastFetchedAt > oneWeekAgo { // for testing purpose change oneMinAgo to oneWeekAgo
                     DispatchQueue.main.async {
                         self.logger.debug("Using cached articles")
                         self.articles = storedArticles.map { $0.toArticle() }.sorted { $0.publishDate > $1.publishDate }
                     }
-                    return
+                    return true
                 }
+                return false
             }
         } catch {
             print("CoreData fetch failed: \(error)")
         }
+        return false
     }
     
     func downloadAndSaveImage(from url: URL, for cdArticle: CDArticle, atIndex index: Int) async {
