@@ -66,6 +66,7 @@ struct PoloLifestyleMagazineApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(MagazineViewModel())
+                .environmentObject(ArticleViewModel())
         }
     }
 }

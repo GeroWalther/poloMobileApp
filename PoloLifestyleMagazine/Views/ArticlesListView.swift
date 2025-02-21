@@ -1,7 +1,8 @@
 import SwiftUI
 
 struct ArticlesListView: View {
-    @EnvironmentObject private var viewModel: MagazineViewModel
+    //@EnvironmentObject private var viewModel: MagazineViewModel
+    @EnvironmentObject private var viewModel: ArticleViewModel
     
     var body: some View {
         ZStack {
@@ -76,6 +77,8 @@ struct ArticlesListView: View {
             Task {
                 await viewModel.fetchArticles()
             }
+//            let testDate = Calendar.current.date(from: DateComponents(year: 2025, month: 2, day: 17, hour: 9))! // Monday, Feb 19, 9 AM
+//            Task { await viewModel.fetchArticles(testLastFetchedAt: testDate) }
         }
         .navigationTitle("Articles")
         .navigationBarTitleDisplayMode(.inline)
@@ -89,16 +92,12 @@ struct ArticlesListView: View {
             for: .navigationBar
         )
         .toolbarBackground(.visible, for: .navigationBar)
-//        .task {
-//            await viewModel.fetchArticles()
-//            //await viewModel.fetchArticlesDirectly()
-//        }
     }
 }
 
 struct ArticleRowView: View {
     let article: Article
-    @EnvironmentObject private var viewModel: MagazineViewModel
+    @EnvironmentObject private var viewModel: ArticleViewModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {

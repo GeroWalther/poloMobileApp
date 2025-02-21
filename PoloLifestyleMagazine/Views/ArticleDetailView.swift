@@ -4,7 +4,7 @@ import SafariServices
 /// A view that displays the content of a single article with rich text formatting and clickable links
 struct ArticleDetailView: View {
     let article: Article
-    @EnvironmentObject private var viewModel: MagazineViewModel
+    @EnvironmentObject private var viewModel: ArticleViewModel
     
     var relatedArticles: [Article] {
         viewModel.articles
@@ -115,7 +115,7 @@ struct SectionContentView: View {
     @State private var selectedImage: String?
     /// Tracks the URL that should be displayed in the Safari view
     @State private var presentedURL: URL?
-    @EnvironmentObject private var viewModel: MagazineViewModel
+    @EnvironmentObject private var viewModel: ArticleViewModel
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             if let subheading = section.subheading, !subheading.isEmpty {
@@ -203,7 +203,7 @@ extension URL: Identifiable {
 /// A view that displays a card for a related article in the "You May Also Like" section
 struct RelatedArticleCard: View {
     let article: Article
-    @EnvironmentObject private var viewModel: MagazineViewModel
+    @EnvironmentObject private var viewModel: ArticleViewModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {

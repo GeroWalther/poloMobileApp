@@ -4,7 +4,7 @@ struct FullScreenImageView: View {
     let imageUrl: String
     @Environment(\.dismiss) private var dismiss
     @State private var scale: CGFloat = 1.0
-    @EnvironmentObject private var viewModel: MagazineViewModel
+    @EnvironmentObject private var viewModel: ArticleViewModel
 
     var body: some View {
         ZStack {
