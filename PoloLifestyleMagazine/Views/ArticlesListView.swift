@@ -77,7 +77,7 @@ struct ArticlesListView: View {
             Task {
                 await viewModel.fetchArticles()
             }
-//            let testDate = Calendar.current.date(from: DateComponents(year: 2025, month: 2, day: 17, hour: 9))! // Monday, Feb 19, 9 AM
+//            let testDate = Calendar.current.date(from: DateComponents(year: 2025, month: 2, day: 22, hour: 9, minute: 30))! // Monday, Feb 19, 9 AM
 //            Task { await viewModel.fetchArticles(testLastFetchedAt: testDate) }
         }
         .navigationTitle("Articles")

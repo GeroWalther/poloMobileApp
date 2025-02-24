@@ -60,28 +60,39 @@ class ArticleViewModel: ObservableObject {
             print("CoreData fetch failed: \(error)")
         }
 
+        
         let mostRecentSaturday9AM: Date = {
-            let todayWeekday = calendar.component(.weekday, from: now) // 1 = Sunday, 7 = Saturday
-            let daysSinceLastSaturday = (todayWeekday >= 7) ? todayWeekday - 7 : todayWeekday // Days to subtract
-
-            // Move back to last Saturday
+            let calendar = Calendar.current
+            let now = Date()
+            
+            // Get today's weekday (1 = Sunday, 7 = Saturday)
+            let todayWeekday = calendar.component(.weekday, from: now)
+            
+            // Calculate how many days to go back to reach last Saturday
+            let daysSinceLastSaturday = (todayWeekday == 7) ? 0 : todayWeekday
+            
+            // Find the last Saturday
             guard let lastSaturday = calendar.date(byAdding: .day, value: -daysSinceLastSaturday, to: now) else {
                 return now
             }
-
-            // Set time to 9 AM
+            
+            // Convert to local time with 9 AM
             return calendar.date(bySettingHour: 9, minute: 0, second: 0, of: lastSaturday) ?? lastSaturday
         }()
 
-        print("🔍 lastFetchedAt: \(lastFetchedAt)")
-        print("📅 mostRecentSaturday9AM: \(mostRecentSaturday9AM)")
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss ZZZZ"
+        formatter.timeZone = TimeZone.current // Set to device's local time zone
 
-        if lastFetchedAt! < mostRecentSaturday9AM {
+        print("📅 mostRecentSaturday9AM (Local):", formatter.string(from: mostRecentSaturday9AM))
+        print("📅 lastFetchedAt (Local):", formatter.string(from: lastFetchedAt!))
+
+        if formatter.string(from: lastFetchedAt!) < formatter.string(from: mostRecentSaturday9AM) {
             print("✅ Missed Saturday Fetch: true")
         } else {
             print("❌ Missed Saturday Fetch: false")
         }
-        let missedSaturdayFetch = lastFetchedAt! < mostRecentSaturday9AM
+        let missedSaturdayFetch = formatter.string(from: lastFetchedAt!) < formatter.string(from: mostRecentSaturday9AM)
         
         if !isInternetAvailable() || isLoading || (isValid && !forceRefresh && !missedSaturdayFetch) {
             return
@@ -165,29 +176,41 @@ class ArticleViewModel: ObservableObject {
 //        }
 //
 //        let mostRecentSaturday9AM: Date = {
-//            let todayWeekday = calendar.component(.weekday, from: now) // 1 = Sunday, 7 = Saturday
-//            let daysSinceLastSaturday = (todayWeekday >= 7) ? todayWeekday - 7 : todayWeekday // Days to subtract
-//
-//            // Move back to last Saturday
+//            let calendar = Calendar.current
+//            let now = Date()
+//            
+//            // Get today's weekday (1 = Sunday, 7 = Saturday)
+//            let todayWeekday = calendar.component(.weekday, from: now)
+//            
+//            // Calculate how many days to go back to reach last Saturday
+//            let daysSinceLastSaturday = (todayWeekday == 7) ? 0 : todayWeekday
+//            
+//            // Find the last Saturday
 //            guard let lastSaturday = calendar.date(byAdding: .day, value: -daysSinceLastSaturday, to: now) else {
 //                return now
 //            }
-//
-//            // Set time to 9 AM
+//            
+//            // Convert to local time with 9 AM
 //            return calendar.date(bySettingHour: 9, minute: 0, second: 0, of: lastSaturday) ?? lastSaturday
 //        }()
-//        
 //
 //        print("🔍 lastFetchedAt: \(lastFetchedAt)")
 //        print("📅 mostRecentSaturday9AM: \(mostRecentSaturday9AM)")
+//        
+//        let formatter = DateFormatter()
+//        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss ZZZZ"
+//        formatter.timeZone = TimeZone.current // Set to device's local time zone
 //
-//        if lastFetchedAt! < mostRecentSaturday9AM {
+//        print("📅 mostRecentSaturday9AM (Local):", formatter.string(from: mostRecentSaturday9AM))
+//        print("📅 lastFetchedAt (Local):", formatter.string(from: lastFetchedAt!))
+//
+//        if formatter.string(from: lastFetchedAt!) < formatter.string(from: mostRecentSaturday9AM) {
 //            print("✅ Missed Saturday Fetch: true")
 //        } else {
 //            print("❌ Missed Saturday Fetch: false")
 //        }
 //
-//        let missedSaturdayFetch = lastFetchedAt! < mostRecentSaturday9AM
+//    let missedSaturdayFetch = formatter.string(from: lastFetchedAt!) < formatter.string(from: mostRecentSaturday9AM)
 //
 //        print(missedSaturdayFetch)
 //        
