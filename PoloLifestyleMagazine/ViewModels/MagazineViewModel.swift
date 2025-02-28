@@ -15,7 +15,6 @@ class MagazineViewModel: ObservableObject {
     private let context = PersistenceController.shared.container.viewContext
     var fetchTask: Task<Void, Never>?  // Store the ongoing fetch task
 
-    private let articleCacheDuration: TimeInterval = 7 * 24 * 60 * 60  // 1 week
     private let magazineFetchDates: [Int] = [1, 4, 7, 10] // Quarterly fetch months (Jan, Apr, Jul, Oct)
 
     init() {
