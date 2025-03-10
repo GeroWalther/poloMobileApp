@@ -6,95 +6,139 @@ struct MagazinesView: View {
     @State private var selectedMagazine: Magazine? = nil
     
     var body: some View {
-        NavigationView {
-            ZStack {
-                // Background gradient with grey tones
-                LinearGradient(
-                    gradient: Gradient(colors: [
-                        Color(UIColor(red: 0.95, green: 0.95, blue: 0.95, alpha: 1.0)), // Light grey
-                        Color(UIColor(red: 0.92, green: 0.92, blue: 0.92, alpha: 1.0))  // Slightly darker grey
-                    ]),
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
-                
-                Group {
-                    if viewModel.isLoading {
-                        VStack(spacing: 20) {
-                            ProgressView()
-                                .scaleEffect(1.5)
-                                .tint(.gray)
-                            Text("Loading Magazines...")
-                                .foregroundColor(.gray)
-                                .font(.headline)
-                        }
-                    } else if let error = viewModel.error {
-                        VStack(spacing: 20) {
-                            Image(systemName: "exclamationmark.triangle")
-                                .font(.system(size: 50))
-                            Text("Failed to load magazines")
-                                .font(.headline)
-                            Text(error.localizedDescription)
-                                .font(.subheadline)
-                                .multilineTextAlignment(.center)
-                            Button("Try Again") {
-                                Task {
-                                    await viewModel.fetchMagazines()
-                                }
-                            }
-                            .buttonStyle(.bordered)
-                            .tint(.gray)
-                        }
-                        .foregroundColor(.gray)
-                    } else if viewModel.magazines.isEmpty {
-                        VStack(spacing: 20) {
-                            Image(systemName: "magazine")
-                                .font(.system(size: 50))
-                            Text("No magazines available")
-                                .font(.headline)
-                        }
-                        .foregroundColor(.gray)
-                    } else {
-                        GeometryReader { geometry in
-                            ScrollView {
-                                LazyVGrid(columns: [
-                                    GridItem(.adaptive(minimum: geometry.size.width > geometry.size.height ? 400 : 300), spacing: 20)
-                                ], spacing: 20) {
-                                    ForEach(viewModel.magazines) { magazine in
-                                        Button {
-                                            selectedMagazine = magazine
-                                        } label: {
-                                            MagazineCoverView(magazine: magazine)
-                                                .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
-                                        }
-                                    }
-                                }
-                                .padding()
-                            }
-                            .refreshable {
-                                await viewModel.fetchMagazines(forceRefresh: true)
-                            }
-                        }
+        // Use different navigation containers based on device type
+        if viewModel.isIPad() {
+            // For iPad: Use NavigationSplitView with customized behavior
+            NavigationSplitView(columnVisibility: .constant(.all)) {
+                // Sidebar (will be shown alongside content)
+                magazinesList
+                    .navigationTitle("Magazines")
+            } detail: {
+                // Detail view (main content area)
+                if let selectedMag = selectedMagazine {
+                    MagazineReaderView(magazine: selectedMag)
+                } else if !viewModel.magazines.isEmpty {
+                    // Auto-select first magazine when none is selected
+                    Color.clear.onAppear {
+                        selectedMagazine = viewModel.magazines.first
                     }
+                } else {
+                    // Empty state or loading
+                    emptyStateView
                 }
-                .toolbar {
-                    ToolbarItem(placement: .principal) {
-                        PoloLifestyleHeader()
-                    }
-                }
-//                .task {
-//                    await viewModel.fetchMagazines()
-//                }
             }
             .onAppear() {
                 Task {
                     await viewModel.fetchMagazines()
                 }
             }
+        } else {
+            // For iPhone: Use standard NavigationView
+            NavigationView {
+                ZStack {
+                    // Background gradient with grey tones
+                    LinearGradient(
+                        gradient: Gradient(colors: [
+                            Color(UIColor(red: 0.95, green: 0.95, blue: 0.95, alpha: 1.0)), // Light grey
+                            Color(UIColor(red: 0.92, green: 0.92, blue: 0.92, alpha: 1.0))  // Slightly darker grey
+                        ]),
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .ignoresSafeArea()
+                    
+                    Group {
+                        if viewModel.isLoading {
+                            loadingView
+                        } else if let error = viewModel.error {
+                            errorView(error)
+                        } else if viewModel.magazines.isEmpty {
+                            emptyStateView
+                        } else {
+                            magazinesList
+                        }
+                    }
+                    .toolbar {
+                        ToolbarItem(placement: .principal) {
+                            PoloLifestyleHeader()
+                        }
+                    }
+                }
+                .onAppear() {
+                    Task {
+                        await viewModel.fetchMagazines()
+                    }
+                }
+            }
+            .fullScreenCover(item: $selectedMagazine) { magazine in
+                MagazineReaderView(magazine: magazine)
+            }
         }
-        .fullScreenCover(item: $selectedMagazine) { magazine in
-            MagazineReaderView(magazine: magazine)
+    }
+    
+    // MARK: - Component Views
+    
+    private var loadingView: some View {
+        VStack(spacing: 20) {
+            ProgressView()
+                .scaleEffect(1.5)
+                .tint(.gray)
+            Text("Loading Magazines...")
+                .foregroundColor(.gray)
+                .font(.headline)
+        }
+    }
+    
+    private func errorView(_ error: Error) -> some View {
+        VStack(spacing: 20) {
+            Image(systemName: "exclamationmark.triangle")
+                .font(.system(size: 50))
+            Text("Failed to load magazines")
+                .font(.headline)
+            Text(error.localizedDescription)
+                .font(.subheadline)
+                .multilineTextAlignment(.center)
+            Button("Try Again") {
+                Task {
+                    await viewModel.fetchMagazines()
+                }
+            }
+            .buttonStyle(.bordered)
+            .tint(.gray)
+        }
+        .foregroundColor(.gray)
+    }
+    
+    private var emptyStateView: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "magazine")
+                .font(.system(size: 50))
+            Text("No magazines available")
+                .font(.headline)
+        }
+        .foregroundColor(.gray)
+    }
+    
+    private var magazinesList: some View {
+        GeometryReader { geometry in
+            ScrollView {
+                LazyVGrid(columns: [
+                    GridItem(.adaptive(minimum: geometry.size.width > geometry.size.height ? 400 : 300), spacing: 20)
+                ], spacing: 20) {
+                    ForEach(viewModel.magazines) { magazine in
+                        Button {
+                            selectedMagazine = magazine
+                        } label: {
+                            MagazineCoverView(magazine: magazine)
+                                .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
+                        }
+                    }
+                }
+                .padding()
+            }
+            .refreshable {
+                await viewModel.fetchMagazines(forceRefresh: true)
+            }
         }
     }
 }

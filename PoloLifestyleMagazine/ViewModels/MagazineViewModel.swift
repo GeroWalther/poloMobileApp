@@ -188,4 +188,24 @@ class MagazineViewModel: ObservableObject {
         let fileURL = documentsDirectory.appendingPathComponent(imageName)
         return fileURL
     }
+
+    private func shouldFetchQuarterly(lastFetchedAt: Date) -> Bool {
+        let calendar = Calendar.current
+        let currentMonth = calendar.component(.month, from: Date())
+        let lastFetchMonth = calendar.component(.month, from: lastFetchedAt)
+        
+        // Check if we're in a new quarter compared to last fetch
+        return magazineFetchDates.contains(currentMonth) && currentMonth != lastFetchMonth
+    }
+    
+    /// Checks if the current device is an iPad
+    func isIPad() -> Bool {
+        return UIDevice.current.userInterfaceIdiom == .pad
+    }
+    
+    /// Checks if internet connection is available
+    private func isInternetAvailable() -> Bool {
+        // Simple implementation - in a real app, use Reachability or NWPathMonitor
+        return true
+    }
 }

@@ -114,20 +114,22 @@ struct MagazineReaderView: View {
                     }
                 }
                 
-                // Add close button
-                VStack {
-                    HStack {
-                        Button {
-                            dismiss()
-                        } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .font(.title)
-                                .foregroundColor(.gray)
+                // Add close button only on iPhone
+                if !viewModel.isIPad() {
+                    VStack {
+                        HStack {
+                            Button {
+                                dismiss()
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.title)
+                                    .foregroundColor(.gray)
+                            }
+                            .padding()
+                            Spacer()
                         }
-                        .padding()
                         Spacer()
                     }
-                    Spacer()
                 }
             }
         }
