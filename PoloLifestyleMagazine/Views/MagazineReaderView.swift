@@ -152,8 +152,26 @@ struct MagazineReaderView: View {
     }
     
     private func loadPDF() {
+        // First check if the magazine.pdf is a valid string
+        guard !magazine.pdf.isEmpty else {
+            loadingError = NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Magazine PDF path is empty"])
+            isLoading = false
+            return
+        }
+        
+        // Try to get the URL from the documents directory
         guard let url = viewModel.fetchMagazineFromDocuments(fileName: magazine.pdf) else {
-            loadingError = NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])
+            // If the file doesn't exist locally, try to download it directly
+            if let remoteUrl = URL(string: magazine.pdf), remoteUrl.scheme != nil {
+                // This might be a remote URL, try to download it
+                downloadAndOpenPDF(from: remoteUrl)
+                return
+            }
+            
+            // Provide more detailed error information
+            let errorMessage = "PDF file not found: \(magazine.pdf)"
+            print(errorMessage)
+            loadingError = NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: errorMessage])
             isLoading = false
             return
         }
@@ -161,19 +179,64 @@ struct MagazineReaderView: View {
         isLoading = true
         loadingError = nil
         
-        let request = URLRequest(url: url, cachePolicy: .returnCacheDataElseLoad)
+        // Load the PDF from the local URL
+        if let document = PDFDocument(url: url) {
+            DispatchQueue.main.async {
+                self.pdfDocument = document
+                self.totalPages = document.pageCount
+                self.isLoading = false
+            }
+        } else {
+            // Try loading with data task as fallback
+            let request = URLRequest(url: url, cachePolicy: .returnCacheDataElseLoad)
+            
+            URLSession.shared.dataTask(with: request) { data, response, error in
+                DispatchQueue.main.async {
+                    if let error = error {
+                        self.loadingError = error
+                    } else if let data = data, let document = PDFDocument(data: data) {
+                        self.pdfDocument = document
+                        self.totalPages = document.pageCount
+                    } else {
+                        self.loadingError = NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to load Magazine"])
+                    }
+                    self.isLoading = false
+                }
+            }.resume()
+        }
+    }
+
+    // Helper method to download and open a PDF from a remote URL
+    private func downloadAndOpenPDF(from url: URL) {
+        isLoading = true
+        loadingError = nil
         
-        URLSession.shared.dataTask(with: request) { data, response, error in
+        URLSession.shared.dataTask(with: url) { data, response, error in
             DispatchQueue.main.async {
                 if let error = error {
-                    loadingError = error
+                    self.loadingError = error
                 } else if let data = data, let document = PDFDocument(data: data) {
-                    pdfDocument = document
-                    totalPages = document.pageCount
+                    // Save the PDF locally for future use
+                    let fileName = "magazine_\(self.magazine.id).pdf"
+                    let fileURL = self.viewModel.getDocumentsDirectory().appendingPathComponent(fileName)
+                    
+                    do {
+                        try data.write(to: fileURL)
+                        
+                        // Update the magazine model
+                        var updatedMagazine = self.magazine
+                        updatedMagazine.pdf = fileName
+                        
+                        // Use the document
+                        self.pdfDocument = document
+                        self.totalPages = document.pageCount
+                    } catch {
+                        self.loadingError = error
+                    }
                 } else {
-                    loadingError = NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to load Magazine"])
+                    self.loadingError = NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to download Magazine"])
                 }
-                isLoading = false
+                self.isLoading = false
             }
         }.resume()
     }

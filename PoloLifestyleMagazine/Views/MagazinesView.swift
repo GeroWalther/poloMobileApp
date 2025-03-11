@@ -29,7 +29,7 @@ struct MagazinesView: View {
             }
             .onAppear() {
                 Task {
-                    await viewModel.fetchMagazines()
+                    await viewModel.fetchMagazines(forceRefresh: false)
                 }
             }
         } else {
@@ -66,7 +66,7 @@ struct MagazinesView: View {
                 }
                 .onAppear() {
                     Task {
-                        await viewModel.fetchMagazines()
+                        await viewModel.fetchMagazines(forceRefresh: false)
                     }
                 }
             }
@@ -100,7 +100,7 @@ struct MagazinesView: View {
                 .multilineTextAlignment(.center)
             Button("Try Again") {
                 Task {
-                    await viewModel.fetchMagazines()
+                    await viewModel.fetchMagazines(forceRefresh: true)
                 }
             }
             .buttonStyle(.bordered)
@@ -146,16 +146,17 @@ struct MagazinesView: View {
 private struct MagazineRowView: View {
     let magazine: Magazine
     @StateObject private var viewModel = MagazineViewModel()
+    @State private var isLoading: Bool = false
+    @State private var pdfError: Error? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Magazine Cover Preview //URL(string: )
+            // Magazine Cover Preview
             ZStack {
-                AsyncImage(url: viewModel.fetchMagazineFromDocuments(fileName: magazine.pdf)) { image in
-                    image
-                        .resizable()
+                if let pdfUrl = viewModel.fetchMagazineFromDocuments(fileName: magazine.pdf) {
+                    PDFThumbnailView(url: pdfUrl, isLoading: $isLoading, error: $pdfError)
                         .aspectRatio(contentMode: .fill)
-                } placeholder: {
+                } else {
                     Rectangle()
                         .fill(Color.gray.opacity(0.2))
                         .overlay(

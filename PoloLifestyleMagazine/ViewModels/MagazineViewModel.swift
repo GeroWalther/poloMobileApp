@@ -160,7 +160,7 @@ class MagazineViewModel: ObservableObject {
 
     
     /// Get the document directory path
-    private func getDocumentsDirectory() -> URL {
+    func getDocumentsDirectory() -> URL {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
     }
 
