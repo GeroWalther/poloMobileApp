@@ -3,6 +3,7 @@ import SwiftUI
 struct ArticlesListView: View {
     //@EnvironmentObject private var viewModel: MagazineViewModel
     @EnvironmentObject private var viewModel: ArticleViewModel
+    @State private var hasAppeared = false
     
     var body: some View {
         ZStack {
@@ -27,6 +28,7 @@ struct ArticlesListView: View {
                             .foregroundColor(.gray)
                             .font(.headline)
                     }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if let error = viewModel.error {
                     VStack(spacing: 20) {
                         Image(systemName: "exclamationmark.triangle")
@@ -45,6 +47,7 @@ struct ArticlesListView: View {
                         .tint(.gray)
                     }
                     .foregroundColor(.gray)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if viewModel.articles.isEmpty {
                     VStack(spacing: 20) {
                         Image(systemName: "newspaper")
@@ -53,6 +56,7 @@ struct ArticlesListView: View {
                             .font(.headline)
                     }
                     .foregroundColor(.gray)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     ScrollView {
                         LazyVStack(spacing: 20) {
@@ -85,8 +89,10 @@ struct ArticlesListView: View {
                                 .padding()
                             }
                         }
-                        .padding(.vertical, 20)  // Add vertical padding to the stack
+                        .padding(.vertical, 20)
+                        .frame(maxWidth: .infinity, minHeight: 0)
                     }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .refreshable {
                         await viewModel.fetchInitialArticles(forceRefresh: true)
                     }
@@ -94,20 +100,17 @@ struct ArticlesListView: View {
             }
         }
         .onAppear() {
-            // Only fetch if we don't have articles yet
-            if viewModel.articles.isEmpty {
-                Task {
-                    // Check if we have any cached data first
-                    let hasCachedData = await viewModel.hasCachedData()
-                    if hasCachedData {
-                        print("📥 Using cache")
-                        // Use cache if available
-                        await viewModel.fetchInitialArticles(forceRefresh: false)
-                    } else {
-
-                        // Force refresh only when cache is truly empty
-                        await viewModel.fetchInitialArticles(forceRefresh: true)
-                    }
+            Task {
+                print("🔍 ArticlesListView onAppear - articles count: \(viewModel.articles.count), hasAppeared: \(hasAppeared)")
+                
+                if !hasAppeared {
+                    // First time appearing - force refresh like pull-to-refresh to fix layout
+                    print("🔄 First appearance - forcing refresh like pull-to-refresh")
+                    await viewModel.fetchInitialArticles(forceRefresh: true)
+                    hasAppeared = true
+                } else {
+                    print("✅ Already appeared before - no refresh needed")
+                    // Subsequent appearances (navigation back) - no refresh needed
                 }
             }
         }
@@ -165,9 +168,10 @@ struct ArticleRowView: View {
             .padding(.horizontal, 16)  // Increased horizontal padding
             .padding(.vertical, 12)    // Added vertical padding
         }
+        .frame(maxWidth: .infinity)  // Ensure the card takes full available width
         .background(Color.white)
         .cornerRadius(12)
         .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
         .padding(.horizontal, 16)      // Add padding around the entire card
     }
-} 
+}

@@ -40,73 +40,26 @@ struct LazyImageView: View {
                 Rectangle()
                     .fill(Color.gray.opacity(0.2))
                     .overlay(
-                        Image(systemName: "photo")
-                            .foregroundColor(.gray)
-                            .font(.title2)
+                        VStack(spacing: 8) {
+                            Image(systemName: "photo")
+                                .foregroundColor(.gray)
+                                .font(.title2)
+                            if shouldLoad {
+                                ProgressView()
+                                    .scaleEffect(0.8)
+                                    .tint(.gray)
+                            }
+                        }
                     )
             }
         }
         .frame(height: height)
+        .frame(maxWidth: .infinity)  // Ensure proper width constraint
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .onAppear {
             // Only start loading when the view appears
             shouldLoad = true
         }
-        .onDisappear {
-            // Optional: You can implement unloading logic here if needed
-        }
     }
 }
 
-// Alternative implementation using visibility detection
-struct LazyImageViewWithVisibility: View {
-    let imageUrl: String
-    let height: CGFloat
-    @EnvironmentObject private var viewModel: ArticleViewModel
-    @State private var isVisible = false
-    @State private var shouldLoad = false
-    
-    var body: some View {
-        AsyncImage(url: shouldLoad ? viewModel.fetchImageFromDocumentsDirectory(imageName: imageUrl) : nil) { image in
-            image
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-        } placeholder: {
-            Rectangle()
-                .fill(Color.gray.opacity(0.2))
-                .overlay(
-                    Group {
-                        if shouldLoad {
-                            ProgressView()
-                                .tint(.gray)
-                        } else {
-                            Image(systemName: "photo")
-                                .foregroundColor(.gray)
-                                .font(.title2)
-                        }
-                    }
-                )
-        }
-        .frame(height: height)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .background(
-            // Invisible geometry reader to detect when view is visible
-            GeometryReader { geometry in
-                Color.clear
-                    .onAppear {
-                        // Check if the view is actually visible on screen
-                        isVisible = true
-                        if isVisible && !shouldLoad {
-                            // Add a small delay to avoid loading too many images at once
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                shouldLoad = true
-                            }
-                        }
-                    }
-                    .onDisappear {
-                        isVisible = false
-                    }
-            }
-        )
-    }
-}
