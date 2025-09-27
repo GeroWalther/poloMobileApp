@@ -14,78 +14,76 @@ struct ArticleDetailView: View {
     }
     
     var body: some View {
-        GeometryReader { geometry in
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    // Hero Image
-                    AsyncImage(url: viewModel.fetchImageFromDocumentsDirectory(imageName: article.titleImage)) { image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    } placeholder: {
-                        Rectangle()
-                            .fill(Color.gray.opacity(0.2))
-                            .overlay(
-                                ProgressView()
-                                    .tint(.gray)
-                            )
-                    }
-                    .frame(width: geometry.size.width, height: 300)
-                    .padding(.top, 95)
-                    .clipped()
-                    .onAppear {
-                        // Download image if needed when detail view appears
-                        Task {
-                            await viewModel.downloadImageIfNeeded(for: article)
-                        }
-                    }
-                    
-                    // Content Container
-                    VStack(alignment: .leading, spacing: 24) {
-                        // Title and Description
-                        articleHeader(width: geometry.size.width)
-                        
-                        // Sections
-                        if let sections = article.sections {
-                            ForEach(Array(sections.enumerated()), id: \.offset) { index, section in
-                                SectionContentView(section: section, screenWidth: geometry.size.width)
-                                    .padding(.top, 8)
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 32)
-                    
-                    // You May Also Like section
-                    if !relatedArticles.isEmpty {
-                        VStack(alignment: .leading, spacing: 16) {
-                            Text("You May Also Like")
-                                .font(.custom("Times New Roman", size: 24))
-                                .fontWeight(.bold)
-                                .foregroundColor(.init(white: 0.2))
-                                .padding(.horizontal, 24)
-                                .padding(.top, 32)
-                            
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 16) {
-                                    ForEach(relatedArticles) { relatedArticle in
-                                        NavigationLink {
-                                            ArticleDetailView(article: relatedArticle)
-                                        } label: {
-                                            RelatedArticleCard(article: relatedArticle)
-                                        }
-                                        .buttonStyle(PlainButtonStyle())
-                                    }
-                                }
-                                .padding(.horizontal, 24)
-                            }
-                        }
-                        .padding(.bottom, 32)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                // Hero Image
+                AsyncImage(url: viewModel.fetchImageFromDocumentsDirectory(imageName: article.titleImage)) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } placeholder: {
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.2))
+                        .overlay(
+                            ProgressView()
+                                .tint(.gray)
+                        )
+                }
+                .frame(maxWidth: .infinity, minHeight: 300, maxHeight: 300)
+                .padding(.top, 95)
+                .clipped()
+                .onAppear {
+                    // Download image if needed when detail view appears
+                    Task {
+                        await viewModel.downloadImageIfNeeded(for: article)
                     }
                 }
+                
+                // Content Container
+                VStack(alignment: .leading, spacing: 24) {
+                    // Title and Description
+                    articleHeader()
+                    
+                    // Sections
+                    if let sections = article.sections {
+                        ForEach(Array(sections.enumerated()), id: \.offset) { index, section in
+                            SectionContentView(section: section, screenWidth: nil)
+                                .padding(.top, 8)
+                        }
+                    }
+                }
+                .padding(.horizontal, 24)
+                .padding(.bottom, 32)
+                
+                // You May Also Like section
+                if !relatedArticles.isEmpty {
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("You May Also Like")
+                            .font(.custom("Times New Roman", size: 24))
+                            .fontWeight(.bold)
+                            .foregroundColor(.init(white: 0.2))
+                            .padding(.horizontal, 24)
+                            .padding(.top, 32)
+                        
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 16) {
+                                ForEach(relatedArticles) { relatedArticle in
+                                    NavigationLink {
+                                        ArticleDetailView(article: relatedArticle)
+                                    } label: {
+                                        RelatedArticleCard(article: relatedArticle)
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
+                                }
+                            }
+                            .padding(.horizontal, 24)
+                        }
+                    }
+                    .padding(.bottom, 32)
+                }
             }
-            .background(Color.white)
         }
+        .background(Color.white)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
@@ -95,20 +93,20 @@ struct ArticleDetailView: View {
         .ignoresSafeArea(.container, edges: .top)
     }
     
-    private func articleHeader(width: CGFloat) -> some View {
+    private func articleHeader() -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(article.title)
                 .font(.custom("Times New Roman", size: 32))
                 .fontWeight(.bold)
                 .foregroundColor(.init(white: 0.2))
                 .padding(.top, 24)
-                .frame(maxWidth: width - 48, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
             
             Text(article.description)
                 .font(.custom("Times New Roman", size: 20))
                 .foregroundColor(.init(white: 0.3))
                 .lineSpacing(8)
-                .frame(maxWidth: width - 48, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }
@@ -116,7 +114,7 @@ struct ArticleDetailView: View {
 /// A view that displays the content of a single article with rich text formatting and clickable links
 struct SectionContentView: View {
     let section: Article.Section
-    let screenWidth: CGFloat
+    let screenWidth: CGFloat?
     /// Tracks the currently selected image for full-screen display
     @State private var selectedImage: String?
     /// Tracks the URL that should be displayed in the Safari view
@@ -155,14 +153,14 @@ struct SectionContentView: View {
                     .font(.custom("Times New Roman", size: 24))
                     .fontWeight(.semibold)
                     .foregroundColor(.init(white: 0.2))
-                    .frame(maxWidth: screenWidth - 48, alignment: .leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
             
             if let text = section.text, !text.isEmpty {
                 HTMLText(html: text) { url in
                     presentedURL = url
                 }
-                .frame(maxWidth: screenWidth - 48, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             
             if let images = section.images, !images.isEmpty {

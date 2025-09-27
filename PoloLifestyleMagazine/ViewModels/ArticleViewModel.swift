@@ -549,7 +549,7 @@ class ArticleViewModel: ObservableObject {
                 let lastFetchedAt = storedArticles.first?.lastFetchedAt ?? .distantPast
                 print("last fetch date", lastFetchedAt)
                 if !forceRefresh, lastFetchedAt > oneWeekAgo { // for testing purpose change oneMinAgo to oneWeekAgo
-                    DispatchQueue.main.async {
+                    Task { @MainActor in
                         self.logger.debug("Using cached articles")
                         self.articles = storedArticles
                             .map { $0.toArticle() }
