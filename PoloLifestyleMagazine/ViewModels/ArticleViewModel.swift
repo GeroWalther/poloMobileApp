@@ -13,13 +13,21 @@ import OSLog
 class ArticleViewModel: ObservableObject {
     @Published private(set) var articles: [Article] = []
     @Published private(set) var isLoading = false
+    @Published private(set) var isLoadingMore = false
     @Published private(set) var error: Error?
+    @Published private(set) var hasMorePages = true
     
     private let articleCacheDuration: TimeInterval = 7 * 24 * 60 * 60  // 1 week
+    private let articlesPerPage = 4
+    private let prefetchThreshold = 2 // Start prefetching when user is 2 items from end
+    private var currentPage = 0
+    private var totalArticlesCount = 0
+    
     private let supabase = SupabaseService.shared
     private let logger = Logger(subsystem: "com.gw.PoloLifestyle", category: "ArticleViewModel")
     private let context = PersistenceController.shared.container.viewContext
     var fetchTask: Task<Void, Never>?  // Store the ongoing fetch task
+    var prefetchTask: Task<Void, Never>?  // Store the ongoing prefetch task
 
     init() {
         loadCachedData()
@@ -27,16 +35,17 @@ class ArticleViewModel: ObservableObject {
 
     private func loadCachedData() {
         Task {
-            let currentDate = Date()
-
             let articleFetch = NSFetchRequest<CDArticle>(entityName: "CDArticle")
-            articleFetch.predicate = NSPredicate(format: "lastFetchedAt > %@", currentDate.addingTimeInterval(-articleCacheDuration) as NSDate)
+            articleFetch.sortDescriptors = [NSSortDescriptor(key: "lastFetchedAt", ascending: false)]
+            articleFetch.fetchLimit = articlesPerPage // Only load first page from cache
 
             do {
                 let cdArticles = try context.fetch(articleFetch)
-
-                await MainActor.run {
-                    self.articles = cdArticles.map { $0.toArticle() }
+                if !cdArticles.isEmpty {
+                    await MainActor.run {
+                        self.articles = cdArticles.map { $0.toArticle() }
+                        // Show cached content immediately for better UX
+                    }
                 }
             } catch {
                 logger.error("Failed to load cached data: \(error)")
@@ -44,11 +53,319 @@ class ArticleViewModel: ObservableObject {
         }
     }
     
+    // MARK: - Pagination Methods
+    
+    func fetchInitialArticles(forceRefresh: Bool = false) async {
+        // Reset pagination state
+        currentPage = 0
+        articles = []
+        hasMorePages = true
+        
+        if forceRefresh {
+            // Clear cache and force fetch from server
+            await clearCache()
+            await fetchArticlesPage(page: currentPage, isInitial: true)
+        } else {
+            await fetchArticles(forceRefresh: forceRefresh)
+        }
+    }
+    
+    private func clearCache() async {
+        let deleteRequest = NSBatchDeleteRequest(fetchRequest: NSFetchRequest<NSFetchRequestResult>(entityName: "CDArticle"))
+        do {
+            _ = try context.execute(deleteRequest)
+            saveContext()
+        } catch {
+            logger.error("Failed to clear cache: \(error)")
+        }
+    }
+    
+    func loadMoreArticles() async {
+        guard hasMorePages && !isLoadingMore else { return }
+        
+        currentPage += 1
+        await fetchArticlesPage(page: currentPage, isInitial: false)
+    }
+    
+    func shouldLoadMore(currentItem: Article) -> Bool {
+        guard let itemIndex = articles.firstIndex(where: { $0.id == currentItem.id }) else {
+            return false
+        }
+        
+        return itemIndex >= articles.count - prefetchThreshold
+    }
+    
+    private func fetchArticlesPage(page: Int, isInitial: Bool) async {
+        let offset = page * articlesPerPage
+        
+        if isInitial {
+            isLoading = true
+        } else {
+            isLoadingMore = true
+        }
+        error = nil
+        
+        let task = Task {
+            do {
+                // First, get the total count
+                if isInitial {
+                    let countResponse = try await supabase.client
+                        .database
+                        .from("articles")
+                        .select("id", head: false, count: .exact)
+                        .execute()
+                    
+                    totalArticlesCount = countResponse.count ?? 0
+                }
+                
+                // Fetch paginated articles
+                let response = try await supabase.client
+                    .database
+                    .from("articles")
+                    .select()
+                    .order("created_at", ascending: false)
+                    .range(from: offset, to: offset + articlesPerPage - 1)
+                    .execute()
+                
+                let decoder = JSONDecoder()
+                let originalArticles = try decoder.decode([Article].self, from: response.data)
+                
+                // Create articles with converted filenames for UI
+                var articlesForUI: [Article] = []
+                for article in originalArticles {
+                    var uiArticle = article
+                    let titleImageFilename = "\(article.id).jpg"
+                    uiArticle.titleImage = titleImageFilename // Convert to filename for UI
+                    articlesForUI.append(uiArticle)
+                    print("🎨 UI Article \(article.id): titleImage set to \(titleImageFilename)")
+                }
+                
+                await MainActor.run {
+                    if isInitial {
+                        self.articles = articlesForUI
+                    } else {
+                        // Filter out duplicates before appending
+                        let uniqueNewArticles = articlesForUI.filter { newArticle in
+                            !self.articles.contains { $0.id == newArticle.id }
+                        }
+                        self.articles.append(contentsOf: uniqueNewArticles)
+                    }
+                    
+                    // Update hasMorePages based on response
+                    self.hasMorePages = originalArticles.count == self.articlesPerPage && 
+                                       self.articles.count < self.totalArticlesCount
+                    
+                    if isInitial {
+                        self.isLoading = false
+                    } else {
+                        self.isLoadingMore = false
+                    }
+                }
+                
+                // Only download images for visible articles (first 4-6 items) using original URLs
+                let imagesToDownload = isInitial ? min(6, originalArticles.count) : min(2, originalArticles.count)
+                await downloadImagesForOriginalArticles(Array(originalArticles.prefix(imagesToDownload)), startIndex: offset)
+                
+                // Also download section images for these articles
+                await downloadSectionImagesForArticles(Array(originalArticles.prefix(imagesToDownload)))
+                
+            } catch {
+                await MainActor.run {
+                    self.error = error
+                    if isInitial {
+                        self.isLoading = false
+                    } else {
+                        self.isLoadingMore = false
+                    }
+                }
+                logger.error("Failed to fetch articles page: \(error)")
+            }
+        }
+        
+        if isInitial {
+            fetchTask = task
+        } else {
+            prefetchTask = task
+        }
+    }
+    
+    private func downloadImagesForOriginalArticles(_ originalArticles: [Article], startIndex: Int) async {
+        for (index, article) in originalArticles.enumerated() {
+            let imageName = "\(article.id).jpg"
+            let imagePath = getDocumentsDirectory().appendingPathComponent(imageName)
+            
+            // Only download if image doesn't exist
+            if !FileManager.default.fileExists(atPath: imagePath.path) {
+                if let imageUrl = URL(string: article.titleImage) {
+                    print("⬇️ Downloading title image for article \(article.id): \(article.titleImage) -> \(imageName)")
+                    
+                    // Find existing CoreData article or create new one
+                    let fetchRequest = NSFetchRequest<CDArticle>(entityName: "CDArticle")
+                    fetchRequest.predicate = NSPredicate(format: "id == %@", article.id)
+                    
+                    do {
+                        let existingArticles = try context.fetch(fetchRequest)
+                        let cdArticle: CDArticle
+                        
+                        if let existingArticle = existingArticles.first {
+                            cdArticle = existingArticle
+                        } else {
+                            cdArticle = article.toCoreData(context: context, updatedSections: [])
+                        }
+                        
+                        cdArticle.titleImage = imageName // Store filename, not URL
+                        await downloadAndSaveImage(from: imageUrl, for: cdArticle, atIndex: startIndex + index)
+                        print("✅ Successfully set title image filename: \(imageName) for article \(article.id)")
+                    } catch {
+                        print("❌ Error updating title image for article \(article.id): \(error)")
+                    }
+                } else {
+                    print("❌ Invalid title image URL for article \(article.id): \(article.titleImage)")
+                }
+            } else {
+                print("✅ Title image already exists for article \(article.id): \(imageName)")
+            }
+        }
+        saveContext()
+    }
+    
+    private func downloadSectionImagesForArticles(_ originalArticles: [Article]) async {
+        print("🖼️ Starting section image download for \(originalArticles.count) articles")
+        
+        for article in originalArticles {
+            guard let sections = article.sections else { continue }
+            
+            var updatedSections: [Article.Section] = []
+            
+            for section in sections {
+                guard let images = section.images else { 
+                    // No images in this section, keep as is
+                    updatedSections.append(section)
+                    continue 
+                }
+                
+                print("🖼️ Article \(article.id): Found \(images.count) section images")
+                
+                var localImagePaths: [String] = []
+                
+                for imageUrlString in images {
+                    if let imageUrl = URL(string: imageUrlString) {
+                        let imageName = UUID().uuidString + ".jpg"
+                        print("⬇️ Downloading section image: \(imageUrlString) -> \(imageName)")
+                        
+                        if let localPath = await saveSectionImageLocally(from: imageUrl, withName: imageName) {
+                            print("✅ Successfully saved section image: \(localPath)")
+                            localImagePaths.append(localPath)
+                        } else {
+                            print("❌ Failed to save section image: \(imageUrlString)")
+                            // Keep original URL if download failed
+                            localImagePaths.append(imageUrlString)
+                        }
+                    } else {
+                        print("❌ Invalid section image URL: \(imageUrlString)")
+                        localImagePaths.append(imageUrlString)
+                    }
+                }
+                
+                // Create updated section with local image paths
+                updatedSections.append(Article.Section(
+                    subheading: section.subheading, 
+                    text: section.text, 
+                    images: localImagePaths
+                ))
+            }
+            
+            // Find existing CoreData article or create new one
+            let fetchRequest = NSFetchRequest<CDArticle>(entityName: "CDArticle")
+            fetchRequest.predicate = NSPredicate(format: "id == %@", article.id)
+            
+            do {
+                let existingArticles = try context.fetch(fetchRequest)
+                let cdArticle: CDArticle
+                
+                if let existingArticle = existingArticles.first {
+                    cdArticle = existingArticle
+                } else {
+                    cdArticle = article.toCoreData(context: context, updatedSections: updatedSections)
+                }
+                
+                // Update with new sections
+                cdArticle.lastFetchedAt = Date()
+                
+                // Convert updated sections to CoreData format
+                if let sectionsData = try? JSONEncoder().encode(updatedSections) {
+                    cdArticle.sectionsData = sectionsData
+                    print("🔄 Updated sections for article \(article.id) with \(updatedSections.count) sections")
+                    for (index, section) in updatedSections.enumerated() {
+                        if let images = section.images, !images.isEmpty {
+                            print("✅ Section \(index): \(images.count) images - \(images.prefix(2))")
+                        }
+                    }
+                }
+                
+            } catch {
+                print("❌ Error updating CoreData for article \(article.id): \(error)")
+            }
+        }
+        
+        saveContext()
+        
+        // Refresh UI with updated articles from CoreData
+        await MainActor.run {
+            self.refreshArticlesFromCoreData()
+        }
+        
+        print("🖼️ Completed section image download and CoreData update")
+    }
+    
+    private func refreshArticlesFromCoreData() {
+        let fetchRequest = NSFetchRequest<CDArticle>(entityName: "CDArticle")
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "lastFetchedAt", ascending: false)]
+        
+        do {
+            let cdArticles = try context.fetch(fetchRequest)
+            let refreshedArticles = cdArticles.map { $0.toArticle() }
+            
+            // Update only the sections, preserve title images that were already converted
+            for (index, currentArticle) in articles.enumerated() {
+                if let updatedArticle = refreshedArticles.first(where: { $0.id == currentArticle.id }) {
+                    var mergedArticle = updatedArticle
+                    
+                    // Preserve the converted title image filename if it exists locally
+                    let titleImageFilename = "\(currentArticle.id).jpg"
+                    let imagePath = getDocumentsDirectory().appendingPathComponent(titleImageFilename)
+                    if FileManager.default.fileExists(atPath: imagePath.path) {
+                        mergedArticle.titleImage = titleImageFilename
+                        print("✅ Preserved title image: \(titleImageFilename) for article \(currentArticle.id)")
+                    } else {
+                        mergedArticle.titleImage = updatedArticle.titleImage
+                        print("⚠️ Using CoreData title image: \(updatedArticle.titleImage) for article \(currentArticle.id)")
+                    }
+                    
+                    articles[index] = mergedArticle
+                    print("🔄 Refreshed article \(currentArticle.id) with updated sections")
+                    
+                    // Debug: Print section images to verify they're updated
+                    if let sections = mergedArticle.sections {
+                        for (sectionIndex, section) in sections.enumerated() {
+                            if let images = section.images, !images.isEmpty {
+                                print("🖼️ Updated Section \(sectionIndex): \(images.count) images - \(images.prefix(2))")
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Trigger UI update
+            objectWillChange.send()
+            
+        } catch {
+            logger.error("Failed to refresh articles from CoreData: \(error)")
+        }
+    }
+
     func fetchArticles(forceRefresh: Bool = false) async {
         let isValid = self.fetchArticlesFromCoreData(forceRefresh: forceRefresh)
-        
-        let now = Date()
-        let calendar = Calendar.current
         
         // Get last fetched date from Core Data
         let fetchRequest = NSFetchRequest<CDArticle>(entityName: "CDArticle")
@@ -60,7 +377,6 @@ class ArticleViewModel: ObservableObject {
             print("CoreData fetch failed: \(error)")
         }
 
-        
         let mostRecentSaturday9AM: Date = {
             let calendar = Calendar.current
             let now = Date()
@@ -98,61 +414,8 @@ class ArticleViewModel: ObservableObject {
             return
         }
 
-        isLoading = true
-        error = nil
-
-        fetchTask = Task {
-            do {
-                let response = try await supabase.client
-                    .database
-                    .from("articles")
-                    .select()
-                    .order("created_at", ascending: false)
-                    .execute()
-
-                let decoder = JSONDecoder()
-                let newArticles = try decoder.decode([Article].self, from: response.data)
-
-                let deleteRequest = NSBatchDeleteRequest(fetchRequest: NSFetchRequest<NSFetchRequestResult>(entityName: "CDArticle"))
-                _ = try? context.execute(deleteRequest)
-
-                for (index, article) in newArticles.enumerated() {
-                    var updatedSections: [Article.Section] = []
-
-                    for section in article.sections ?? [] {
-                        var localImagePaths: [String] = []
-                        for imageUrlString in section.images ?? [] {
-                            if let imageUrl = URL(string: imageUrlString) {
-                                let imageName = UUID().uuidString + ".jpg"
-                                if let localPath = await saveSectionImageLocally(from: imageUrl, withName: imageName) {
-                                    localImagePaths.append(localPath)
-                                }
-                            }
-                        }
-                        updatedSections.append(Article.Section(subheading: section.subheading, text: section.text, images: localImagePaths))
-                    }
-
-                    let cdArticle = article.toCoreData(context: context, updatedSections: updatedSections)
-                    cdArticle.lastFetchedAt = Date()
-                    
-                    if let imageUrl = URL(string: article.titleImage) {
-                        await downloadAndSaveImage(from: imageUrl, for: cdArticle, atIndex: index)
-                    }
-                }
-                saveContext()
-
-                DispatchQueue.main.asyncAfter(deadline: .now()) {
-                    self.isLoading = false
-                    let _ = self.fetchArticlesFromCoreData()
-                }
-            } catch {
-                DispatchQueue.main.async {
-                    self.error = error
-                    self.isLoading = false
-                }
-                print("Failed to fetch articles: \(error)")
-            }
-        }
+        // Use new pagination method
+        await fetchArticlesPage(page: currentPage, isInitial: true)
     }
     
 // Uncomment this code for testing purpose if you want to test it simply pass testLastFetchedAt as hardcoded and test it
@@ -381,11 +644,80 @@ class ArticleViewModel: ObservableObject {
     func fetchImageFromDocumentsDirectory(imageName: String) -> URL? {
         let fileManager = FileManager.default
         guard let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            print("❌ Cannot get documents directory")
             return nil
         }
 
         let fileURL = documentsDirectory.appendingPathComponent(imageName)
+        let fileExists = fileManager.fileExists(atPath: fileURL.path)
+        print("📷 fetchImageFromDocumentsDirectory: \(imageName) -> exists: \(fileExists) at \(fileURL.path)")
+        
         return fileURL
+    }
+    
+    // MARK: - On-demand Image Loading
+    
+    func downloadImageIfNeeded(for article: Article) async {
+        // Create proper filename from article ID
+        let imageName = "\(article.id).jpg"
+        let imagePath = getDocumentsDirectory().appendingPathComponent(imageName)
+        
+        print("🔍 Checking image for article \(article.id): \(imageName)")
+        print("📁 Image path: \(imagePath.path)")
+        print("📋 File exists: \(FileManager.default.fileExists(atPath: imagePath.path))")
+        
+        // If image doesn't exist locally, download it
+        if !FileManager.default.fileExists(atPath: imagePath.path) {
+            print("⬇️ Downloading image for article \(article.id)")
+            // Get original URL from server for this specific article
+            await downloadImageFromServer(articleId: article.id, imageName: imageName)
+        } else {
+            print("✅ Image already exists for article \(article.id)")
+        }
+    }
+    
+    private func downloadImageFromServer(articleId: String, imageName: String) async {
+        do {
+            // Fetch the specific article from server to get original URL
+            let response = try await supabase.client
+                .database
+                .from("articles")
+                .select()
+                .eq("id", value: articleId)
+                .execute()
+            
+            let decoder = JSONDecoder()
+            let serverArticles = try decoder.decode([Article].self, from: response.data)
+            
+            guard let serverArticle = serverArticles.first else {
+                logger.error("Article with id \(articleId) not found on server")
+                return
+            }
+            
+            // Download using original URL
+            if let imageUrl = URL(string: serverArticle.titleImage) {
+                logger.info("Downloading image from: \(serverArticle.titleImage)")
+                let (data, _) = try await URLSession.shared.data(from: imageUrl)
+                let imagePath = getDocumentsDirectory().appendingPathComponent(imageName)
+                try data.write(to: imagePath)
+                
+                logger.info("Successfully downloaded and saved image: \(imageName)")
+                
+                // Save to CoreData
+                let cdArticle = serverArticle.toCoreData(context: context, updatedSections: [])
+                cdArticle.titleImage = imageName
+                saveContext()
+                
+                // Trigger UI refresh
+                await MainActor.run {
+                    self.objectWillChange.send()
+                }
+            } else {
+                logger.error("Invalid image URL for article \(articleId): \(serverArticle.titleImage)")
+            }
+        } catch {
+            logger.error("Failed to download image for article \(articleId): \(error)")
+        }
     }
 }
 

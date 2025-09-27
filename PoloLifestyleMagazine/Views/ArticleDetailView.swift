@@ -33,6 +33,12 @@ struct ArticleDetailView: View {
                     .frame(width: geometry.size.width, height: 300)
                     .padding(.top, 95)
                     .clipped()
+                    .onAppear {
+                        // Download image if needed when detail view appears
+                        Task {
+                            await viewModel.downloadImageIfNeeded(for: article)
+                        }
+                    }
                     
                     // Content Container
                     VStack(alignment: .leading, spacing: 24) {
@@ -116,6 +122,32 @@ struct SectionContentView: View {
     /// Tracks the URL that should be displayed in the Safari view
     @State private var presentedURL: URL?
     @EnvironmentObject private var viewModel: ArticleViewModel
+    
+    private func downloadSectionImageIfNeeded(imageUrl: String) async {
+        // Check if this is already a local filename or needs to be downloaded
+        let imagePath = viewModel.fetchImageFromDocumentsDirectory(imageName: imageUrl)
+        
+        // If file doesn't exist locally and imageUrl looks like a URL, download it
+        if imagePath != nil && !FileManager.default.fileExists(atPath: imagePath!.path) && imageUrl.contains("http") {
+            do {
+                if let url = URL(string: imageUrl) {
+                    let (data, _) = try await URLSession.shared.data(from: url)
+                    let fileName = URL(string: imageUrl)?.lastPathComponent ?? UUID().uuidString + ".jpg"
+                    
+                    let fileManager = FileManager.default
+                    guard let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first else {
+                        return
+                    }
+                    
+                    let fileURL = documentsDirectory.appendingPathComponent(fileName)
+                    try data.write(to: fileURL)
+                }
+            } catch {
+                print("Failed to download section image: \(error)")
+            }
+        }
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             if let subheading = section.subheading, !subheading.isEmpty {
@@ -134,10 +166,18 @@ struct SectionContentView: View {
             }
             
             if let images = section.images, !images.isEmpty {
+                let _ = print("🖼️ SectionContentView: Loading \(images.count) images")
+                let _ = images.enumerated().forEach { index, imageUrl in
+                    print("🖼️ Image \(index): \(imageUrl)")
+                }
+                
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 16) {
                         ForEach(images, id: \.self) { imageUrl in
-                            AsyncImage(url: viewModel.fetchImageFromDocumentsDirectory(imageName: imageUrl)) { image in
+                            let imageFileURL = viewModel.fetchImageFromDocumentsDirectory(imageName: imageUrl)
+                            let _ = print("🖼️ Trying to load image: \(imageUrl) from path: \(imageFileURL?.path ?? "nil")")
+                            
+                            AsyncImage(url: imageFileURL) { image in
                                 image
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)
@@ -153,6 +193,12 @@ struct SectionContentView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                             .onTapGesture {
                                 selectedImage = imageUrl
+                            }
+                            .onAppear {
+                                // Download section image if needed
+                                Task {
+                                    await downloadSectionImageIfNeeded(imageUrl: imageUrl)
+                                }
                             }
                         }
                     }
@@ -222,6 +268,12 @@ struct RelatedArticleCard: View {
             }
             .frame(width: 280, height: 160)
             .clipShape(RoundedRectangle(cornerRadius: 12))
+            .onAppear {
+                // Download image if needed when related article appears
+                Task {
+                    await viewModel.downloadImageIfNeeded(for: article)
+                }
+            }
             
             // Text content
             VStack(alignment: .leading, spacing: 4) {

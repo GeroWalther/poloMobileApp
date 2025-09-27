@@ -49,7 +49,7 @@ struct ArticlesListView: View {
                     VStack(spacing: 20) {
                         Image(systemName: "newspaper")
                             .font(.system(size: 50))
-                        Text("No articles available")
+                        Text("Articles")
                             .font(.headline)
                     }
                     .foregroundColor(.gray)
@@ -61,24 +61,45 @@ struct ArticlesListView: View {
                                     ArticleDetailView(article: article)
                                 } label: {
                                     ArticleRowView(article: article)
+                                        .onAppear {
+                                            // Check if we should load more articles
+                                            if viewModel.shouldLoadMore(currentItem: article) {
+                                                Task {
+                                                    await viewModel.loadMoreArticles()
+                                                }
+                                            }
+                                        }
                                 }
                                 .buttonStyle(PlainButtonStyle())
+                            }
+                            
+                            // Loading indicator for more articles
+                            if viewModel.isLoadingMore {
+                                HStack {
+                                    ProgressView()
+                                        .scaleEffect(0.8)
+                                    Text("Loading more articles...")
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                }
+                                .padding()
                             }
                         }
                         .padding(.vertical, 20)  // Add vertical padding to the stack
                     }
                     .refreshable {
-                        await viewModel.fetchArticles(forceRefresh: true)
+                        await viewModel.fetchInitialArticles(forceRefresh: true)
                     }
                 }
             }
         }
         .onAppear() {
-            Task {
-                await viewModel.fetchArticles()
+            // Only fetch if we don't have articles yet
+            if viewModel.articles.isEmpty {
+                Task {
+                    await viewModel.fetchInitialArticles()
+                }
             }
-//            let testDate = Calendar.current.date(from: DateComponents(year: 2025, month: 2, day: 22, hour: 9, minute: 30))! // Monday, Feb 19, 9 AM
-//            Task { await viewModel.fetchArticles(testLastFetchedAt: testDate) }
         }
         .navigationTitle("Articles")
         .navigationBarTitleDisplayMode(.inline)
@@ -101,21 +122,14 @@ struct ArticleRowView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Image
-            AsyncImage(url: viewModel.fetchImageFromDocumentsDirectory(imageName: article.titleImage)) { image in
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-            } placeholder: {
-                Rectangle()
-                    .fill(Color.gray.opacity(0.2))
-                    .overlay(
-                        ProgressView()
-                            .tint(.gray)
-                    )
-            }
-            .frame(height: 200)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            // Image with lazy loading
+            LazyImageView(article: article, height: 200)
+                .onAppear {
+                    // Download image if needed when it becomes visible
+                    Task {
+                        await viewModel.downloadImageIfNeeded(for: article)
+                    }
+                }
             
             // Text content container with proper padding
             VStack(alignment: .leading, spacing: 8) {
