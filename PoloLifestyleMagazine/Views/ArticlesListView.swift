@@ -97,7 +97,15 @@ struct ArticlesListView: View {
             // Only fetch if we don't have articles yet
             if viewModel.articles.isEmpty {
                 Task {
-                    await viewModel.fetchInitialArticles()
+                    // Check if we have any cached data first
+                    let hasCachedData = await viewModel.hasCachedData()
+                    if hasCachedData {
+                        // Use cache if available
+                        await viewModel.fetchInitialArticles(forceRefresh: false)
+                    } else {
+                        // Force refresh only when cache is truly empty
+                        await viewModel.fetchInitialArticles(forceRefresh: true)
+                    }
                 }
             }
         }

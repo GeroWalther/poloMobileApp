@@ -32,18 +32,32 @@ class ArticleViewModel: ObservableObject {
     init() {
         loadCachedData()
     }
+    
+    func hasCachedData() async -> Bool {
+        let fetchRequest = NSFetchRequest<CDArticle>(entityName: "CDArticle")
+        do {
+            let count = try context.count(for: fetchRequest)
+            return count > 0
+        } catch {
+            logger.error("Failed to check cached data: \(error)")
+            return false
+        }
+    }
 
     private func loadCachedData() {
         Task {
             let articleFetch = NSFetchRequest<CDArticle>(entityName: "CDArticle")
-            articleFetch.sortDescriptors = [NSSortDescriptor(key: "lastFetchedAt", ascending: false)]
+            // Don't sort by lastFetchedAt - get all articles and sort by creation date
             articleFetch.fetchLimit = articlesPerPage // Only load first page from cache
 
             do {
                 let cdArticles = try context.fetch(articleFetch)
                 if !cdArticles.isEmpty {
                     await MainActor.run {
-                        self.articles = cdArticles.map { $0.toArticle() }
+                        // Convert to articles and sort by publish date (creation date)
+                        self.articles = cdArticles
+                            .map { $0.toArticle() }
+                            .sorted { $0.publishDate > $1.publishDate }
                         // Show cached content immediately for better UX
                     }
                 }
