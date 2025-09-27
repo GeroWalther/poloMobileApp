@@ -30,7 +30,8 @@ class ArticleViewModel: ObservableObject {
     var prefetchTask: Task<Void, Never>?  // Store the ongoing prefetch task
 
     init() {
-        loadCachedData()
+        // Load cached data synchronously to avoid race conditions
+        loadCachedDataSync()
     }
     
     func hasCachedData() async -> Bool {
@@ -44,26 +45,33 @@ class ArticleViewModel: ObservableObject {
         }
     }
 
-    private func loadCachedData() {
-        Task {
-            let articleFetch = NSFetchRequest<CDArticle>(entityName: "CDArticle")
-            // Don't sort by lastFetchedAt - get all articles and sort by creation date
-            articleFetch.fetchLimit = articlesPerPage // Only load first page from cache
+    private func loadCachedDataSync() {
+        let articleFetch = NSFetchRequest<CDArticle>(entityName: "CDArticle")
+        // Don't sort by lastFetchedAt - get all articles and sort by creation date
+        articleFetch.fetchLimit = articlesPerPage // Only load first page from cache
 
-            do {
-                let cdArticles = try context.fetch(articleFetch)
-                if !cdArticles.isEmpty {
-                    await MainActor.run {
-                        // Convert to articles and sort by publish date (creation date)
-                        self.articles = cdArticles
-                            .map { $0.toArticle() }
-                            .sorted { $0.publishDate > $1.publishDate }
-                        // Show cached content immediately for better UX
-                    }
-                }
-            } catch {
-                logger.error("Failed to load cached data: \(error)")
+        do {
+            let cdArticles = try context.fetch(articleFetch)
+            if !cdArticles.isEmpty {
+                // Get total count for pagination
+                let totalCountFetch = NSFetchRequest<CDArticle>(entityName: "CDArticle")
+                let totalCount = try context.count(for: totalCountFetch)
+                
+                // Convert to articles and sort by publish date (creation date)
+                self.articles = cdArticles
+                    .map { $0.toArticle() }
+                    .sorted { $0.publishDate > $1.publishDate }
+                
+                // Initialize pagination state for infinite scroll
+                self.currentPage = 0 // We loaded first page from cache
+                self.totalArticlesCount = totalCount
+                // Set hasMorePages based on whether we have more articles in cache
+                self.hasMorePages = self.articles.count < totalCount
+                
+                logger.info("Loaded \(self.articles.count) articles from cache")
             }
+        } catch {
+            logger.error("Failed to load cached data: \(error)")
         }
     }
     
@@ -151,7 +159,6 @@ class ArticleViewModel: ObservableObject {
                     let titleImageFilename = "\(article.id).jpg"
                     uiArticle.titleImage = titleImageFilename // Convert to filename for UI
                     articlesForUI.append(uiArticle)
-                    print("🎨 UI Article \(article.id): titleImage set to \(titleImageFilename)")
                 }
                 
                 await MainActor.run {
@@ -211,7 +218,6 @@ class ArticleViewModel: ObservableObject {
             // Only download if image doesn't exist
             if !FileManager.default.fileExists(atPath: imagePath.path) {
                 if let imageUrl = URL(string: article.titleImage) {
-                    print("⬇️ Downloading title image for article \(article.id): \(article.titleImage) -> \(imageName)")
                     
                     // Find existing CoreData article or create new one
                     let fetchRequest = NSFetchRequest<CDArticle>(entityName: "CDArticle")
@@ -229,7 +235,6 @@ class ArticleViewModel: ObservableObject {
                         
                         cdArticle.titleImage = imageName // Store filename, not URL
                         await downloadAndSaveImage(from: imageUrl, for: cdArticle, atIndex: startIndex + index)
-                        print("✅ Successfully set title image filename: \(imageName) for article \(article.id)")
                     } catch {
                         print("❌ Error updating title image for article \(article.id): \(error)")
                     }
@@ -244,7 +249,6 @@ class ArticleViewModel: ObservableObject {
     }
     
     private func downloadSectionImagesForArticles(_ originalArticles: [Article]) async {
-        print("🖼️ Starting section image download for \(originalArticles.count) articles")
         
         for article in originalArticles {
             guard let sections = article.sections else { continue }
@@ -258,25 +262,19 @@ class ArticleViewModel: ObservableObject {
                     continue 
                 }
                 
-                print("🖼️ Article \(article.id): Found \(images.count) section images")
-                
                 var localImagePaths: [String] = []
                 
                 for imageUrlString in images {
                     if let imageUrl = URL(string: imageUrlString) {
                         let imageName = UUID().uuidString + ".jpg"
-                        print("⬇️ Downloading section image: \(imageUrlString) -> \(imageName)")
                         
                         if let localPath = await saveSectionImageLocally(from: imageUrl, withName: imageName) {
-                            print("✅ Successfully saved section image: \(localPath)")
                             localImagePaths.append(localPath)
                         } else {
-                            print("❌ Failed to save section image: \(imageUrlString)")
                             // Keep original URL if download failed
                             localImagePaths.append(imageUrlString)
                         }
                     } else {
-                        print("❌ Invalid section image URL: \(imageUrlString)")
                         localImagePaths.append(imageUrlString)
                     }
                 }
@@ -309,12 +307,6 @@ class ArticleViewModel: ObservableObject {
                 // Convert updated sections to CoreData format
                 if let sectionsData = try? JSONEncoder().encode(updatedSections) {
                     cdArticle.sectionsData = sectionsData
-                    print("🔄 Updated sections for article \(article.id) with \(updatedSections.count) sections")
-                    for (index, section) in updatedSections.enumerated() {
-                        if let images = section.images, !images.isEmpty {
-                            print("✅ Section \(index): \(images.count) images - \(images.prefix(2))")
-                        }
-                    }
                 }
                 
             } catch {
@@ -328,8 +320,6 @@ class ArticleViewModel: ObservableObject {
         await MainActor.run {
             self.refreshArticlesFromCoreData()
         }
-        
-        print("🖼️ Completed section image download and CoreData update")
     }
     
     private func refreshArticlesFromCoreData() {
@@ -350,28 +340,18 @@ class ArticleViewModel: ObservableObject {
                     let imagePath = getDocumentsDirectory().appendingPathComponent(titleImageFilename)
                     if FileManager.default.fileExists(atPath: imagePath.path) {
                         mergedArticle.titleImage = titleImageFilename
-                        print("✅ Preserved title image: \(titleImageFilename) for article \(currentArticle.id)")
                     } else {
                         mergedArticle.titleImage = updatedArticle.titleImage
-                        print("⚠️ Using CoreData title image: \(updatedArticle.titleImage) for article \(currentArticle.id)")
                     }
                     
                     articles[index] = mergedArticle
-                    print("🔄 Refreshed article \(currentArticle.id) with updated sections")
-                    
-                    // Debug: Print section images to verify they're updated
-                    if let sections = mergedArticle.sections {
-                        for (sectionIndex, section) in sections.enumerated() {
-                            if let images = section.images, !images.isEmpty {
-                                print("🖼️ Updated Section \(sectionIndex): \(images.count) images - \(images.prefix(2))")
-                            }
-                        }
-                    }
                 }
             }
             
-            // Trigger UI update
-            objectWillChange.send()
+            // Defer UI update to avoid "Publishing changes from within view updates"
+            Task { @MainActor in
+                self.objectWillChange.send()
+            }
             
         } catch {
             logger.error("Failed to refresh articles from CoreData: \(error)")
@@ -605,7 +585,7 @@ class ArticleViewModel: ObservableObject {
             try data.write(to: fileURL)
             return fileURL.lastPathComponent // Store only the filename
         } catch {
-            print("Error saving image: \(error)")
+            logger.error("Error saving image: \(error)")
             return nil
         }
     }
@@ -621,7 +601,7 @@ class ArticleViewModel: ObservableObject {
             let (data, _) = try await URLSession.shared.data(from: url)
 
             if let filename = saveImageToDocumentsDirectory(data: data, imageName: "\(cdArticle.id ?? UUID().uuidString).jpg") {
-                DispatchQueue.main.async {
+                await MainActor.run {
                     cdArticle.titleImage = filename
                     self.saveContext()
 
@@ -634,7 +614,7 @@ class ArticleViewModel: ObservableObject {
                 }
             }
         } catch {
-            print("Failed to download image: \(error)")
+            logger.error("Failed to download image: \(error)")
         }
     }
     
@@ -650,7 +630,7 @@ class ArticleViewModel: ObservableObject {
             try data.write(to: fileURL)
             return imageName  // Return only the filename
         } catch {
-            print("Failed to save image: \(error)")
+            logger.error("Failed to save image: \(error)")
             return nil
         }
     }
@@ -663,8 +643,6 @@ class ArticleViewModel: ObservableObject {
         }
 
         let fileURL = documentsDirectory.appendingPathComponent(imageName)
-        let fileExists = fileManager.fileExists(atPath: fileURL.path)
-        print("📷 fetchImageFromDocumentsDirectory: \(imageName) -> exists: \(fileExists) at \(fileURL.path)")
         
         return fileURL
     }
@@ -676,17 +654,10 @@ class ArticleViewModel: ObservableObject {
         let imageName = "\(article.id).jpg"
         let imagePath = getDocumentsDirectory().appendingPathComponent(imageName)
         
-        print("🔍 Checking image for article \(article.id): \(imageName)")
-        print("📁 Image path: \(imagePath.path)")
-        print("📋 File exists: \(FileManager.default.fileExists(atPath: imagePath.path))")
-        
         // If image doesn't exist locally, download it
         if !FileManager.default.fileExists(atPath: imagePath.path) {
-            print("⬇️ Downloading image for article \(article.id)")
             // Get original URL from server for this specific article
             await downloadImageFromServer(articleId: article.id, imageName: imageName)
-        } else {
-            print("✅ Image already exists for article \(article.id)")
         }
     }
     
@@ -710,20 +681,17 @@ class ArticleViewModel: ObservableObject {
             
             // Download using original URL
             if let imageUrl = URL(string: serverArticle.titleImage) {
-                logger.info("Downloading image from: \(serverArticle.titleImage)")
                 let (data, _) = try await URLSession.shared.data(from: imageUrl)
                 let imagePath = getDocumentsDirectory().appendingPathComponent(imageName)
                 try data.write(to: imagePath)
-                
-                logger.info("Successfully downloaded and saved image: \(imageName)")
                 
                 // Save to CoreData
                 let cdArticle = serverArticle.toCoreData(context: context, updatedSections: [])
                 cdArticle.titleImage = imageName
                 saveContext()
                 
-                // Trigger UI refresh
-                await MainActor.run {
+                // Trigger UI refresh with deferral
+                Task { @MainActor in
                     self.objectWillChange.send()
                 }
             } else {

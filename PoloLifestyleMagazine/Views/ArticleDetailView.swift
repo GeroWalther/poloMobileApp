@@ -143,7 +143,7 @@ struct SectionContentView: View {
                     try data.write(to: fileURL)
                 }
             } catch {
-                print("Failed to download section image: \(error)")
+                // Silently handle section image download failures
             }
         }
     }
@@ -166,16 +166,11 @@ struct SectionContentView: View {
             }
             
             if let images = section.images, !images.isEmpty {
-                let _ = print("🖼️ SectionContentView: Loading \(images.count) images")
-                let _ = images.enumerated().forEach { index, imageUrl in
-                    print("🖼️ Image \(index): \(imageUrl)")
-                }
                 
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 16) {
                         ForEach(images, id: \.self) { imageUrl in
                             let imageFileURL = viewModel.fetchImageFromDocumentsDirectory(imageName: imageUrl)
-                            let _ = print("🖼️ Trying to load image: \(imageUrl) from path: \(imageFileURL?.path ?? "nil")")
                             
                             AsyncImage(url: imageFileURL) { image in
                                 image

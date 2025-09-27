@@ -100,9 +100,11 @@ struct ArticlesListView: View {
                     // Check if we have any cached data first
                     let hasCachedData = await viewModel.hasCachedData()
                     if hasCachedData {
+                        print("📥 Using cache")
                         // Use cache if available
                         await viewModel.fetchInitialArticles(forceRefresh: false)
                     } else {
+
                         // Force refresh only when cache is truly empty
                         await viewModel.fetchInitialArticles(forceRefresh: true)
                     }

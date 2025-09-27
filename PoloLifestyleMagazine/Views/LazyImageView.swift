@@ -8,14 +8,11 @@ struct LazyImageView: View {
     
     private var imageFileName: String {
         // Always use article ID as filename for consistency
-        let filename = "\(article.id).jpg"
-        print("📷 LazyImageView for article \(article.id): article.titleImage='\(article.titleImage)', using filename='\(filename)'")
-        return filename
+        return "\(article.id).jpg"
     }
     
     var body: some View {
         let imageURL = shouldLoad ? viewModel.fetchImageFromDocumentsDirectory(imageName: imageFileName) : nil
-        let _ = print("🔍 AsyncImage for article \(article.id): shouldLoad=\(shouldLoad), filename=\(imageFileName), URL=\(imageURL?.absoluteString ?? "nil")")
         
         Group {
             if shouldLoad, let url = imageURL {
@@ -24,31 +21,19 @@ struct LazyImageView: View {
                     Image(uiImage: uiImage)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
-                        .onAppear {
-                            print("✅ UIImage loaded successfully for \(article.id)")
-                        }
                 } else {
                     // Fallback to AsyncImage
                     AsyncImage(url: url) { image in
                         image
                             .resizable()
                             .aspectRatio(contentMode: .fill)
-                            .onAppear {
-                                print("✅ AsyncImage loaded successfully for \(article.id)")
-                            }
                     } placeholder: {
                         Rectangle()
                             .fill(Color.gray.opacity(0.2))
                             .overlay(
                                 ProgressView()
                                     .tint(.gray)
-                                    .onAppear {
-                                        print("⏳ AsyncImage still loading for \(article.id)")
-                                    }
                             )
-                    }
-                    .onAppear {
-                        print("⚠️ UIImage failed, using AsyncImage for \(article.id)")
                     }
                 }
             } else {
@@ -66,21 +51,6 @@ struct LazyImageView: View {
         .onAppear {
             // Only start loading when the view appears
             shouldLoad = true
-            
-            // Debug: Check if image data is valid
-            if let url = viewModel.fetchImageFromDocumentsDirectory(imageName: imageFileName) {
-                Task {
-                    do {
-                        let data = try Data(contentsOf: url)
-                        print("🖼️ Image data for \(article.id): \(data.count) bytes")
-                        if data.count < 100 {
-                            print("⚠️ Warning: Image file seems too small: \(data.count) bytes")
-                        }
-                    } catch {
-                        print("❌ Error reading image data for \(article.id): \(error)")
-                    }
-                }
-            }
         }
         .onDisappear {
             // Optional: You can implement unloading logic here if needed
